@@ -4,6 +4,40 @@ import { useGraphonHandlers } from './hooks/useGraphonHandlers';
 import { useGraphonLifecycle } from './hooks/useGraphonLifecycle';
 import { useGraphonUpdates } from './hooks/useGraphonUpdates';
 
+/**
+ * High-performance graph visualization component.
+ *
+ * Renders nodes and edges using WebGL (PixiJS) with force-directed layout.
+ * Supports interactive features like node dragging, hover, and click events.
+ *
+ * @typeParam N - Node data type
+ * @typeParam E - Edge data type
+ *
+ * @example
+ * ```tsx
+ * import { Graphon } from '@graphon/react';
+ *
+ * function App() {
+ *   const nodes = [
+ *     { id: 'a', data: { label: 'Node A' } },
+ *     { id: 'b', data: { label: 'Node B' } },
+ *   ];
+ *   const edges = [
+ *     { id: 'e1', source: 'a', target: 'b', data: {} },
+ *   ];
+ *
+ *   return (
+ *     <Graphon
+ *       nodes={nodes}
+ *       edges={edges}
+ *       width={800}
+ *       height={600}
+ *       onNodeClick={(node) => console.log('Clicked:', node.id)}
+ *     />
+ *   );
+ * }
+ * ```
+ */
 export function Graphon<N = Record<string, unknown>, E = Record<string, unknown>>({
   nodes,
   edges,

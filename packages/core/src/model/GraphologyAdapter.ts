@@ -4,6 +4,20 @@ import type { Edge, GraphData, Node } from './types';
 
 type Listener<N, E, K extends GraphEventType> = (payload: GraphEventMap<N, E>[K]) => void;
 
+/**
+ * GraphModel implementation backed by graphology.
+ *
+ * This adapter wraps the graphology library to implement the GraphModel interface.
+ * It provides efficient graph storage with event-driven updates.
+ *
+ * @typeParam N - Node data type
+ * @typeParam E - Edge data type
+ * @example
+ * ```ts
+ * const model = new GraphologyAdapter<{ label: string }, { weight: number }>();
+ * model.addNode({ id: 'a', data: { label: 'Node A' } });
+ * ```
+ */
 export class GraphologyAdapter<
   N = Record<string, unknown>,
   E = Record<string, unknown>,

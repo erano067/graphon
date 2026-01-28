@@ -1,32 +1,70 @@
+/**
+ * Configuration options for the physics simulation.
+ *
+ * These parameters control how the force-directed layout behaves.
+ * Adjust these values to change the look and feel of the graph layout.
+ */
 export interface PhysicsConfig {
+  /** Canvas width in pixels */
   width: number;
+  /** Canvas height in pixels */
   height: number;
+  /** Padding from canvas edges in pixels */
   padding: number;
+  /** Spring force strength for connected nodes (higher = stronger attraction) */
   springStrength: number;
+  /** Ideal spring length between connected nodes in pixels */
   springLength: number;
+  /** Repulsion force between all nodes (higher = more spread out) */
   repulsion: number;
+  /** Velocity damping factor (0-1, lower = faster stabilization) */
   damping: number;
+  /** Maximum velocity cap to prevent instability */
   maxVelocity: number;
+  /** Barnes-Hut approximation threshold (0-1, higher = faster but less accurate) */
   theta: number;
 }
 
+/**
+ * Internal state of a node during physics simulation.
+ */
 export interface NodeState {
+  /** Node identifier */
   id: string;
+  /** Current X position */
   x: number;
+  /** Current Y position */
   y: number;
+  /** Current X velocity */
   vx: number;
+  /** Current Y velocity */
   vy: number;
+  /** If true, node position is fixed and won't move */
   pinned: boolean;
 }
 
+/**
+ * A node in the Barnes-Hut quadtree for efficient force calculations.
+ *
+ * The quadtree divides space into quadrants to approximate distant
+ * node forces, reducing complexity from O(n²) to O(n log n).
+ */
 export interface QuadNode {
+  /** Center of mass X coordinate */
   cx: number;
+  /** Center of mass Y coordinate */
   cy: number;
+  /** Total mass of all nodes in this quadrant */
   mass: number;
+  /** Quadrant origin X */
   x: number;
+  /** Quadrant origin Y */
   y: number;
+  /** Quadrant width (and height, since square) */
   width: number;
+  /** Child quadrants [NW, NE, SW, SE] */
   children: (QuadNode | undefined)[];
+  /** Index of single node if leaf, undefined if internal */
   nodeIndex: number | undefined;
 }
 
