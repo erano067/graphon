@@ -48,3 +48,13 @@ export type {
   PhysicsWorkerClientOptions,
   PhysicsEngine,
 } from './physics';
+
+export { ClusterBuilder, DEFAULT_LOD_CONFIG, LODManager } from './clustering';
+export type {
+  ClusterBuilderOptions,
+  ClusterEdge,
+  ClusterHierarchy,
+  ClusterNode,
+  LODConfig,
+  LODRenderSet,
+} from './clustering';

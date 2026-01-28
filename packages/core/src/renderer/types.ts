@@ -95,7 +95,7 @@ export interface RenderOptions<N> {
   nodeStyleFn?: NodeStyleFn<N>;
   /**
    * If true, user is actively interacting (panning/zooming).
-   * Renderer may skip expensive operations like edge rendering for large graphs.
+   * Used for frame rate throttling during continuous interactions.
    */
   isInteracting?: boolean;
 }

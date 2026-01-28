@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import type { PhysicsEngine } from '@graphon/core';
+import type { PhysicsEngine, PixiRenderer } from '@graphon/core';
 import type { GraphonRefs } from './useGraphonRefs';
 import {
   type HandlerCallbacks,
@@ -54,6 +54,12 @@ function cleanupOnLeave<N, E>(
   }
 }
 
+function getRendererAndPhysics<N, E>(
+  refs: GraphonRefs<N, E>
+): { renderer: PixiRenderer<N, E> | undefined; physics: PhysicsEngine<N, E> | undefined } {
+  return { renderer: refs.renderer.current, physics: refs.physics.current };
+}
+
 export function useGraphonHandlers<N, E>(
   refs: GraphonRefs<N, E>,
   callbacks: HandlerCallbacks<N, E>,
@@ -63,8 +69,7 @@ export function useGraphonHandlers<N, E>(
 
   const handleMouseDown = useCallback(
     (event: React.MouseEvent<HTMLDivElement>) => {
-      const renderer = refs.renderer.current;
-      const physics = refs.physics.current;
+      const { renderer, physics } = getRendererAndPhysics(refs);
       if (!renderer || !physics) return;
       const pos = getMousePos(event);
       if (isDraggable && handleDragStart(pos, renderer, physics, refs)) {
@@ -78,33 +83,26 @@ export function useGraphonHandlers<N, E>(
 
   const handleMouseMove = useCallback(
     (event: React.MouseEvent<HTMLDivElement>) => {
-      const renderer = refs.renderer.current;
-      const physics = refs.physics.current;
+      const { renderer, physics } = getRendererAndPhysics(refs);
       if (!renderer || !physics) return;
       const pos = getMousePos(event);
       if (refs.dragState.current && refs.isDragging.current) {
         handleDragMove({ pos, renderer, physics, refs, callbacks });
       } else if (refs.isPanning.current && refs.panState.current) {
         handlePanMove(pos, renderer, refs);
-      } else {
-        handleHover(pos, renderer, refs, callbacks);
-      }
+      } else handleHover(pos, renderer, refs, callbacks);
     },
     [refs, callbacks]
   );
 
   const handleMouseUp = useCallback(
     (event: React.MouseEvent<HTMLDivElement>) => {
-      const renderer = refs.renderer.current;
-      const physics = refs.physics.current;
+      const { renderer, physics } = getRendererAndPhysics(refs);
       if (!renderer || !physics) return;
       if (refs.dragState.current && refs.isDragging.current) {
         handleDragEnd(physics, refs, callbacks);
-      } else if (refs.isPanning.current) {
-        handlePanEnd(refs);
-      } else {
-        handleClick(getMousePos(event), renderer, callbacks);
-      }
+      } else if (refs.isPanning.current) handlePanEnd(refs);
+      else handleClick(getMousePos(event), renderer, callbacks);
     },
     [refs, callbacks]
   );
@@ -116,11 +114,14 @@ export function useGraphonHandlers<N, E>(
 
   const handleWheel = useCallback(
     (event: WheelEvent) => {
-      if (refs.renderer.current && isZoomable) {
-        handleZoom(event, refs.renderer.current, { minZoom, maxZoom }, refs);
-      }
+      if (!refs.renderer.current || !isZoomable) return;
+      handleZoom(event, refs.renderer.current, {
+        config: { minZoom, maxZoom },
+        refs,
+        ...(callbacks.onZoomChange && { onZoomChange: callbacks.onZoomChange }),
+      });
     },
-    [refs, isZoomable, minZoom, maxZoom]
+    [refs, isZoomable, minZoom, maxZoom, callbacks.onZoomChange]
   );
 
   return { handleMouseDown, handleMouseMove, handleMouseUp, handleMouseLeave, handleWheel };

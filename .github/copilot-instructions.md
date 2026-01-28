@@ -35,13 +35,14 @@ Before every change, ask yourself:
 
 ### Function Design
 - Functions should do **one thing only** — if you can describe it with "and", split it
-- Keep functions **small** (< 20 lines preferred, < 40 max)
+- Keep functions **small** (< 20 lines preferred, < 40 max, **65 hard limit**)
 - Avoid **boolean flag parameters** — split into separate functions instead
-- Avoid **large parameter lists** (> 3 params) — use an options object
+- **Max 4 parameters** — use an options object for more
 - **Negate conditions to exit early** — avoid deep nesting with guard clauses
 - Return early, fail fast — don't wrap entire function body in conditionals
 - Pure functions over side effects when possible
 - Name functions with verbs that describe what they do
+- **Don't fight line limits with compression** — extract helper functions instead; Prettier will expand cramped code anyway
 
 ### File Organization
 - Keep files **small** (< 200 lines)
@@ -95,6 +96,16 @@ Before every change, ask yourself:
 - Readonly by default — mutate explicitly
 - **Avoid nullable/optional fields** — prefer required fields with sensible defaults
 - If a field can be absent, question if it belongs on this type at all
+- **All functions need explicit return types** — including helper functions
+- **Combine type and value imports** — use `import { Foo, type Bar } from 'mod'`
+- **Optional properties with `exactOptionalPropertyTypes`** — never pass `undefined` directly:
+  ```typescript
+  // ❌ Type error with exactOptionalPropertyTypes
+  fn({ optionalProp: maybeUndefined });
+  
+  // ✅ Spread pattern
+  fn({ ...(maybeUndefined && { optionalProp: maybeUndefined }) });
+  ```
 
 ### Testing
 - Test behavior, not implementation

@@ -74,11 +74,16 @@ function createZoomTimeoutManager() {
 
 const zoomTimeout = createZoomTimeoutManager();
 
+export interface ZoomOptions<N, E> {
+  config: ZoomConfig;
+  refs?: GraphonRefs<N, E>;
+  onZoomChange?: (zoom: number) => void;
+}
+
 export function handleZoom<N, E>(
   event: WheelEvent,
   renderer: PixiRenderer<N, E>,
-  config: ZoomConfig,
-  refs?: GraphonRefs<N, E>
+  options: ZoomOptions<N, E>
 ): void {
   event.preventDefault();
 
@@ -91,7 +96,8 @@ export function handleZoom<N, E>(
 
   const viewport = renderer.getViewport();
   const zoomFactor = event.deltaY > 0 ? 0.9 : 1.1;
-  const newScale = Math.max(config.minZoom, Math.min(config.maxZoom, viewport.scale * zoomFactor));
+  const { minZoom, maxZoom } = options.config;
+  const newScale = Math.max(minZoom, Math.min(maxZoom, viewport.scale * zoomFactor));
 
   // Zoom toward mouse position
   const worldX = (mouseX - viewport.x) / viewport.scale;
@@ -102,8 +108,11 @@ export function handleZoom<N, E>(
   renderer.setViewport({ x: newX, y: newY, scale: newScale });
 
   // Mark as interacting during zoom, clear after 150ms of no wheel events
-  if (refs) {
-    refs.isInteracting.current = true;
-    zoomTimeout.scheduleEnd(refs.isInteracting, 150);
+  if (options.refs) {
+    options.refs.isInteracting.current = true;
+    zoomTimeout.scheduleEnd(options.refs.isInteracting, 150);
   }
+
+  // Notify callback of zoom change
+  options.onZoomChange?.(newScale);
 }

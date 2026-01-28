@@ -70,4 +70,6 @@ export interface GraphonProps<N = Record<string, unknown>, E = Record<string, un
   onEdgeHover?: (edge: Edge<E> | undefined) => void;
   /** Callback when canvas (not node/edge) is clicked */
   onCanvasClick?: (position: Position) => void;
+  /** Callback when zoom level changes (useful for LOD integration) */
+  onZoomChange?: (zoom: number) => void;
 }

@@ -66,6 +66,7 @@ export function Graphon<N = Record<string, unknown>, E = Record<string, unknown>
     onEdgeClick,
     onEdgeHover,
     onCanvasClick,
+    onZoomChange,
   } = props;
 
   const refs = useGraphonRefs(nodes, edges, nodeStyleFn);
@@ -89,6 +90,7 @@ export function Graphon<N = Record<string, unknown>, E = Record<string, unknown>
       onEdgeClick,
       onEdgeHover,
       onCanvasClick,
+      onZoomChange,
     },
     { isDraggable, isPannable, isZoomable, minZoom, maxZoom }
   );

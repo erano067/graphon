@@ -15,6 +15,7 @@ export {
   handlePanEnd,
   handleZoom,
   type ZoomConfig,
+  type ZoomOptions,
 } from './panZoomHandlers';
 
 export interface HandlerCallbacks<N, E> {
@@ -25,6 +26,7 @@ export interface HandlerCallbacks<N, E> {
   onEdgeClick: ((edge: Edge<E>) => void) | undefined;
   onEdgeHover: ((edge: Edge<E> | undefined) => void) | undefined;
   onCanvasClick: ((position: Position) => void) | undefined;
+  onZoomChange: ((zoom: number) => void) | undefined;
 }
 
 export function getMousePos(event: React.MouseEvent<HTMLDivElement>): Position {
