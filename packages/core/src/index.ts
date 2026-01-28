@@ -58,3 +58,21 @@ export type {
   LODConfig,
   LODRenderSet,
 } from './clustering';
+
+export {
+  AnimationManager,
+  easings,
+  getEasing,
+  LayoutTransition,
+  NodeAnimator,
+  Tween,
+} from './animation';
+export type {
+  EasingFn,
+  EasingName,
+  LayoutTransitionOptions,
+  NodeAnimationOptions,
+  PositionUpdateCallback,
+  TransitionUpdateCallback,
+  TweenOptions,
+} from './animation';

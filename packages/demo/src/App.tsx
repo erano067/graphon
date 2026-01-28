@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Graphon, type Node, type NodeShape } from '@graphon/react';
 import type { EdgeData, NodeData } from './generator';
 import { Controls } from './components/Controls';
@@ -26,26 +26,31 @@ const COMMUNITY_COLORS_CSS = [
   '#00f5d4',
 ];
 
-export function App() {
+export function App(): React.ReactElement {
   const [nodeCount, setNodeCount] = useState(100);
   const [communityCount, setCommunityCount] = useState(5);
   const [selectedNode, setSelectedNode] = useState<Node<NodeData>>();
   const [hoveredNode, setHoveredNode] = useState<Node<NodeData>>();
   const [seed, setSeed] = useState(0);
+  const [shapeMode, setShapeMode] = useState<'community' | NodeShape>('community');
 
   const { nodes, edges, isLoading } = useGraphGenerator({ nodeCount, communityCount, seed });
 
   const avgDegree = nodes.length > 0 ? ((edges.length * 2) / nodes.length).toFixed(1) : 0;
   const regenerate = useCallback(() => setSeed((s) => s + 1), []);
-  const nodeStyleFn = useCallback(
-    (node: Node<NodeData>) => ({
+
+  const nodeStyleFn = useMemo(() => {
+    return (node: Node<NodeData>) => ({
       color: COMMUNITY_COLORS_HEX[node.data.community % COMMUNITY_COLORS_HEX.length],
-      shape: COMMUNITY_SHAPES[node.data.community % COMMUNITY_SHAPES.length],
-    }),
-    []
-  );
+      shape:
+        shapeMode === 'community'
+          ? COMMUNITY_SHAPES[node.data.community % COMMUNITY_SHAPES.length]
+          : shapeMode,
+    });
+  }, [shapeMode]);
+
   const communityFn = useCallback((node: Node<NodeData>) => node.data.community, []);
-  const getCommunityColor = (community: number) =>
+  const getCommunityColor = (community: number): string =>
     COMMUNITY_COLORS_CSS[community % COMMUNITY_COLORS_CSS.length];
 
   return (
@@ -55,8 +60,10 @@ export function App() {
       <Controls
         nodeCount={nodeCount}
         communityCount={communityCount}
+        shapeMode={shapeMode}
         onNodeCountChange={setNodeCount}
         onCommunityCountChange={setCommunityCount}
+        onShapeModeChange={setShapeMode}
         onRegenerate={regenerate}
       />
 
