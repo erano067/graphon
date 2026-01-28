@@ -4,11 +4,17 @@ import { buildQuadtree } from './Quadtree';
 import { applyForce, applyVelocities, computeForces } from './forces';
 import { computeCommunityPositions, createInitialNodeState } from './positions';
 
+/** Threshold for kinetic energy below which simulation is considered settled. */
+const SETTLE_THRESHOLD = 0.5;
+
 export class PhysicsSimulation<N = Record<string, unknown>, E = Record<string, unknown>> {
   private config: PhysicsConfig;
   private nodeStates = new Map<string, NodeState>();
   private adjacency = new Map<string, Set<string>>();
   private communityGetter?: (node: Node<N>) => number;
+  private cachedPositions: PositionMap = new Map();
+  private isSettled = false;
+  private kineticEnergy = Infinity;
 
   constructor(config: Partial<PhysicsConfig> = {}) {
     this.config = { ...DEFAULT_PHYSICS_CONFIG, ...config };
@@ -21,6 +27,9 @@ export class PhysicsSimulation<N = Record<string, unknown>, E = Record<string, u
   initialize(nodes: Node<N>[], edges: Edge<E>[]): PositionMap {
     this.nodeStates.clear();
     this.adjacency.clear();
+    this.cachedPositions.clear();
+    this.isSettled = false;
+    this.kineticEnergy = Infinity;
 
     const communityPositions = computeCommunityPositions(nodes, this.config, this.communityGetter);
 
@@ -35,10 +44,14 @@ export class PhysicsSimulation<N = Record<string, unknown>, E = Record<string, u
     }
 
     this.buildAdjacency(nodes, edges);
+    this.updateCachedPositions();
     return this.getPositions();
   }
 
   tick(): PositionMap {
+    // Skip physics if simulation has settled
+    if (this.isSettled) return this.getPositions();
+
     const states = Array.from(this.nodeStates.values());
     const { width, height } = this.config;
     const quadtree = buildQuadtree(states, width, height);
@@ -56,7 +69,46 @@ export class PhysicsSimulation<N = Record<string, unknown>, E = Record<string, u
     }
 
     applyVelocities(states);
+    this.updateCachedPositions();
+    this.computeKineticEnergy(states);
+
     return this.getPositions();
+  }
+
+  /** Returns true if the simulation has stabilized. */
+  hasSettled(): boolean {
+    return this.isSettled;
+  }
+
+  /** Returns the current kinetic energy of the simulation. */
+  getKineticEnergy(): number {
+    return this.kineticEnergy;
+  }
+
+  /** Wakes up the simulation (e.g., after user interaction). */
+  wake(): void {
+    this.isSettled = false;
+    this.kineticEnergy = Infinity;
+  }
+
+  private updateCachedPositions(): void {
+    // Clear and rebuild to ensure position objects are new each tick
+    // (necessary for consumers that compare position references)
+    this.cachedPositions.clear();
+    for (const [id, state] of this.nodeStates) {
+      this.cachedPositions.set(id, { x: state.x, y: state.y });
+    }
+  }
+
+  private computeKineticEnergy(states: NodeState[]): void {
+    let energy = 0;
+    for (const state of states) {
+      if (!state.pinned) {
+        energy += state.vx * state.vx + state.vy * state.vy;
+      }
+    }
+    this.kineticEnergy = energy;
+    this.isSettled = energy < SETTLE_THRESHOLD;
   }
 
   setNodePosition(nodeId: string, position: Position): void {
@@ -66,6 +118,8 @@ export class PhysicsSimulation<N = Record<string, unknown>, E = Record<string, u
     state.y = position.y;
     state.vx = 0;
     state.vy = 0;
+    // Update cache with new Position object
+    this.cachedPositions.set(nodeId, { x: position.x, y: position.y });
   }
 
   pinNode(nodeId: string): void {
@@ -78,15 +132,14 @@ export class PhysicsSimulation<N = Record<string, unknown>, E = Record<string, u
 
   unpinNode(nodeId: string): void {
     const state = this.nodeStates.get(nodeId);
-    if (state) state.pinned = false;
+    if (!state) return;
+    state.pinned = false;
+    this.wake(); // Resume simulation when node is released
   }
 
   getPositions(): PositionMap {
-    const positions: PositionMap = new Map();
-    for (const [id, state] of this.nodeStates) {
-      positions.set(id, { x: state.x, y: state.y });
-    }
-    return positions;
+    // Return a copy to ensure consumers get independent snapshots
+    return new Map(this.cachedPositions);
   }
 
   resize(width: number, height: number): void {

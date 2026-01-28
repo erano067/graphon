@@ -90,8 +90,17 @@ export class PixiRenderer<
   ): void {
     this.currentNodes = nodes;
     this.currentEdges = edges;
-    this.positions = new Map(positions);
-    this.renderEdges(edges);
+    this.positions = positions; // Direct reference, no copy needed
+
+    const isLargeGraph = nodes.length > this.config.largeGraphThreshold;
+    const shouldSkipEdges = isLargeGraph && options?.isInteracting === true;
+
+    if (shouldSkipEdges) {
+      this.edgeGraphics?.clear();
+    } else {
+      this.renderEdges(edges);
+    }
+
     this.renderNodes(nodes, options?.nodeColorFn);
     this.applyViewport();
   }

@@ -91,6 +91,11 @@ export interface HitTestResult<N, E> {
 export interface RenderOptions<N> {
   /** Optional function to customize node colors */
   nodeColorFn?: NodeColorFn<N> | undefined;
+  /**
+   * If true, user is actively interacting (panning/zooming).
+   * Renderer may skip expensive operations like edge rendering for large graphs.
+   */
+  isInteracting?: boolean;
 }
 
 /**

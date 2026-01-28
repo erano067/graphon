@@ -19,7 +19,7 @@ interface ComputeForcesParams {
 
 export function computeForces(params: ComputeForcesParams): Force {
   const { state, adjacency, nodeStates, quadtree, config } = params;
-  const { springStrength, springLength, repulsion, width, height, theta } = config;
+  const { springStrength, springLength, maxSpringForce, repulsion, width, height, theta } = config;
 
   const repForce = calculateRepulsion({
     position: { x: state.x, y: state.y },
@@ -31,7 +31,7 @@ export function computeForces(params: ComputeForcesParams): Force {
     state,
     adjacency,
     nodeStates,
-    config: { springStrength, springLength },
+    config: { springStrength, springLength, maxSpringForce },
   });
   const centerForce = computeCenterGravity(state, width, height);
 
@@ -71,7 +71,7 @@ export function applyVelocities(states: NodeState[]): void {
 
 function computeSpringForces(params: SpringParams): Force {
   const { state, adjacency, nodeStates, config } = params;
-  const { springStrength, springLength } = config;
+  const { springStrength, springLength, maxSpringForce } = config;
   const neighbors = adjacency.get(state.id);
   if (!neighbors) return { fx: 0, fy: 0 };
 
@@ -85,7 +85,12 @@ function computeSpringForces(params: SpringParams): Force {
     const dx = neighbor.x - state.x;
     const dy = neighbor.y - state.y;
     const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-    const force = springStrength * (dist - springLength);
+    let force = springStrength * (dist - springLength);
+
+    // Cap spring force to prevent long edges from dominating
+    if (maxSpringForce > 0) {
+      force = Math.max(-maxSpringForce, Math.min(maxSpringForce, force));
+    }
 
     fx += (dx / dist) * force;
     fy += (dy / dist) * force;

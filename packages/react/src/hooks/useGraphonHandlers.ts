@@ -117,7 +117,7 @@ export function useGraphonHandlers<N, E>(
   const handleWheel = useCallback(
     (event: WheelEvent) => {
       if (refs.renderer.current && isZoomable) {
-        handleZoom(event, refs.renderer.current, { minZoom, maxZoom });
+        handleZoom(event, refs.renderer.current, { minZoom, maxZoom }, refs);
       }
     },
     [refs, isZoomable, minZoom, maxZoom]

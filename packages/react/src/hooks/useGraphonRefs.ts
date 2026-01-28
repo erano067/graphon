@@ -19,6 +19,7 @@ export interface GraphonRefs<N, E> {
   dragState: React.RefObject<{ nodeId: string } | undefined>;
   isDragging: React.RefObject<boolean>;
   isPanning: React.RefObject<boolean>;
+  isInteracting: React.RefObject<boolean>;
   panState: React.RefObject<PanState | undefined>;
   nodes: React.RefObject<Node<N>[]>;
   edges: React.RefObject<Edge<E>[]>;
@@ -40,6 +41,7 @@ export function useGraphonRefs<N, E>(
   const dragStateRef = useRef<{ nodeId: string } | undefined>(undefined);
   const isDraggingRef = useRef(false);
   const isPanningRef = useRef(false);
+  const isInteractingRef = useRef(false);
   const panStateRef = useRef<PanState | undefined>(undefined);
   const nodesRef = useRef(nodes);
   const edgesRef = useRef(edges);
@@ -68,6 +70,7 @@ export function useGraphonRefs<N, E>(
     dragState: dragStateRef,
     isDragging: isDraggingRef,
     isPanning: isPanningRef,
+    isInteracting: isInteractingRef,
     panState: panStateRef,
     nodes: nodesRef,
     edges: edgesRef,

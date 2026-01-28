@@ -27,6 +27,6 @@ export const DEFAULT_OPTIONS: GeneratorOptions = {
   nodeCount: 50,
   communityCount: 4,
   avgDegree: 6,
-  intraCommunityBias: 0.8,
+  intraCommunityBias: 0.92,
   triangleClosureRate: 0.4,
 };

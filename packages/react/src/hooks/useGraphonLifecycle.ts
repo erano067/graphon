@@ -21,6 +21,35 @@ function computeGraphKey(nodes: { id: string }[], edges: { id: string }[]): stri
   return `${nodeIds}:${edgeIds}`;
 }
 
+function createAnimationLoop<N, E>(refs: GraphonRefs<N, E>): () => void {
+  let lastFrameTime = 0;
+  const MIN_FRAME_TIME = 16; // ~60fps max
+
+  const tick = (currentTime: number): void => {
+    const { physics, renderer, nodes, edges, nodeColorFn, animation, isInteracting } = refs;
+    if (!physics.current || !renderer.current) {
+      animation.current = undefined;
+      return;
+    }
+    // Throttle during interaction for smoother panning/zooming
+    if (isInteracting.current && currentTime - lastFrameTime < MIN_FRAME_TIME) {
+      animation.current = requestAnimationFrame(tick);
+      return;
+    }
+    lastFrameTime = currentTime;
+    const positions = physics.current.tick();
+    renderer.current.render(nodes.current, edges.current, positions, {
+      nodeColorFn: nodeColorFn.current,
+      isInteracting: isInteracting.current,
+    });
+    animation.current = requestAnimationFrame(tick);
+  };
+
+  return () => {
+    refs.animation.current = requestAnimationFrame(tick);
+  };
+}
+
 export function useGraphonLifecycle<N, E>(
   refs: GraphonRefs<N, E>,
   options: LifecycleOptions<N>
@@ -28,19 +57,7 @@ export function useGraphonLifecycle<N, E>(
   const { width, height, isAnimated, communityFn } = options;
 
   const startAnimationLoop = useCallback((): void => {
-    const tick = (): void => {
-      const { physics, renderer, nodes, edges, nodeColorFn, animation } = refs;
-      if (!physics.current || !renderer.current) {
-        animation.current = undefined;
-        return;
-      }
-      const positions = physics.current.tick();
-      renderer.current.render(nodes.current, edges.current, positions, {
-        nodeColorFn: nodeColorFn.current,
-      });
-      animation.current = requestAnimationFrame(tick);
-    };
-    refs.animation.current = requestAnimationFrame(tick);
+    createAnimationLoop(refs)();
   }, [refs]);
 
   useEffect(() => {

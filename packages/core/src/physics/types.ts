@@ -15,6 +15,8 @@ export interface PhysicsConfig {
   springStrength: number;
   /** Ideal spring length between connected nodes in pixels */
   springLength: number;
+  /** Maximum spring force to prevent long edges from dominating (0 = unlimited) */
+  maxSpringForce: number;
   /** Repulsion force between all nodes (higher = more spread out) */
   repulsion: number;
   /** Velocity damping factor (0-1, lower = faster stabilization) */
@@ -89,11 +91,11 @@ export interface SpringParams {
   state: NodeState;
   adjacency: Map<string, Set<string>>;
   nodeStates: Map<string, NodeState>;
-  config: { springStrength: number; springLength: number };
+  config: { springStrength: number; springLength: number; maxSpringForce: number };
 }
 
 export const VELOCITY_CUTOFF = 0.01;
-export const CENTER_GRAVITY = 0.0002;
+export const CENTER_GRAVITY = 0.00002;
 export const DIST_EPSILON = 0.01;
 
 export const DEFAULT_PHYSICS_CONFIG: PhysicsConfig = {
@@ -102,6 +104,7 @@ export const DEFAULT_PHYSICS_CONFIG: PhysicsConfig = {
   padding: 50,
   springStrength: 0.015,
   springLength: 80,
+  maxSpringForce: 2,
   repulsion: 400,
   damping: 0.7,
   maxVelocity: 10,

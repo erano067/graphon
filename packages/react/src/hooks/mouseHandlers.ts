@@ -139,6 +139,7 @@ export function handlePanStart<N, E>(
     viewportY: viewport.y,
   };
   refs.isPanning.current = true;
+  refs.isInteracting.current = true;
   return true;
 }
 
@@ -164,12 +165,17 @@ export function handlePanMove<N, E>(
 export function handlePanEnd<N, E>(refs: GraphonRefs<N, E>): void {
   refs.panState.current = undefined;
   refs.isPanning.current = false;
+  refs.isInteracting.current = false;
 }
+
+/** Timeout handle for zoom interaction end detection. */
+let zoomEndTimeout: ReturnType<typeof setTimeout> | undefined;
 
 export function handleZoom<N, E>(
   event: WheelEvent,
   renderer: PixiRenderer<N, E>,
-  config: ZoomConfig
+  config: ZoomConfig,
+  refs?: GraphonRefs<N, E>
 ): void {
   event.preventDefault();
 
@@ -191,4 +197,13 @@ export function handleZoom<N, E>(
   const newY = mouseY - worldY * newScale;
 
   renderer.setViewport({ x: newX, y: newY, scale: newScale });
+
+  // Mark as interacting during zoom, clear after 150ms of no wheel events
+  if (refs) {
+    refs.isInteracting.current = true;
+    if (zoomEndTimeout) clearTimeout(zoomEndTimeout);
+    zoomEndTimeout = setTimeout(() => {
+      refs.isInteracting.current = false;
+    }, 150);
+  }
 }
