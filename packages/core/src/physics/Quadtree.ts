@@ -7,10 +7,47 @@ import {
 } from './types';
 
 export function buildQuadtree(states: NodeState[], width: number, height: number): QuadNode {
-  const root = createRootNode(width, height);
+  const bounds = computeBounds(states, width, height);
+  const root = createRootNode(bounds);
   states.forEach((state, i) => insertNode(root, state.x, state.y, i));
   computeMassDistribution(root, states);
   return root;
+}
+
+interface Bounds {
+  minX: number;
+  minY: number;
+  size: number;
+}
+
+function computeBounds(states: NodeState[], defaultWidth: number, defaultHeight: number): Bounds {
+  if (states.length === 0) {
+    return { minX: 0, minY: 0, size: Math.max(defaultWidth, defaultHeight) };
+  }
+
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+
+  for (const state of states) {
+    minX = Math.min(minX, state.x);
+    minY = Math.min(minY, state.y);
+    maxX = Math.max(maxX, state.x);
+    maxY = Math.max(maxY, state.y);
+  }
+
+  // Add margin to prevent nodes at edges from causing issues
+  const margin = 100;
+  minX -= margin;
+  minY -= margin;
+  maxX += margin;
+  maxY += margin;
+
+  // Quadtree needs square bounds
+  const size = Math.max(maxX - minX, maxY - minY, 1);
+
+  return { minX, minY, size };
 }
 
 export function calculateRepulsion(params: RepulsionParams): Force {
@@ -38,14 +75,14 @@ export function calculateRepulsion(params: RepulsionParams): Force {
   );
 }
 
-function createRootNode(width: number, height: number): QuadNode {
+function createRootNode(bounds: Bounds): QuadNode {
   return {
     cx: 0,
     cy: 0,
     mass: 0,
-    x: 0,
-    y: 0,
-    width: Math.max(width, height),
+    x: bounds.minX,
+    y: bounds.minY,
+    width: bounds.size,
     children: [undefined, undefined, undefined, undefined],
     nodeIndex: undefined,
   };

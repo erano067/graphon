@@ -142,6 +142,7 @@ export default tseslint.config(
       '@typescript-eslint/no-non-null-assertion': 'off',
       '@typescript-eslint/no-magic-numbers': 'off',
       '@typescript-eslint/naming-convention': 'off',
+      '@typescript-eslint/unbound-method': 'off',
       'max-nested-callbacks': 'off',
     },
   },

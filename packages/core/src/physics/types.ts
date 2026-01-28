@@ -97,6 +97,8 @@ export interface SpringParams {
 export const VELOCITY_CUTOFF = 0.01;
 export const CENTER_GRAVITY = 0.00002;
 export const DIST_EPSILON = 0.01;
+/** Kinetic energy threshold below which simulation is considered settled */
+export const SETTLE_THRESHOLD = 0.5;
 
 export const DEFAULT_PHYSICS_CONFIG: PhysicsConfig = {
   width: 800,

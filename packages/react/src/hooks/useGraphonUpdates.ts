@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import type { Edge, Node, NodeColorFn } from '@graphon/core';
+import type { Edge, Node, NodeColorFn, PhysicsSimulation, PositionMap } from '@graphon/core';
 import type { GraphonRefs } from './useGraphonRefs';
 
 function computeGraphKey(nodes: { id: string }[], edges: { id: string }[]): string {
@@ -38,10 +38,24 @@ export function useGraphonUpdates<N, E>(
     if (newKey === refs.graphKey.current) return;
 
     refs.graphKey.current = newKey;
-    if (communityFn) physics.setCommunityGetter(communityFn);
 
-    const positions = physics.initialize(nodes, edges);
-    renderer.render(nodes, edges, positions, { nodeColorFn });
+    // setCommunityGetter only exists on main-thread PhysicsSimulation
+    if (communityFn && 'setCommunityGetter' in physics) {
+      (physics as PhysicsSimulation<N, E>).setCommunityGetter(communityFn);
+    }
+
+    const initResult = physics.initialize(nodes, edges);
+
+    // Handle both sync and async initialize
+    const handlePositions = (positions: PositionMap): void => {
+      renderer.render(nodes, edges, positions, { nodeColorFn });
+    };
+
+    if (initResult instanceof Promise) {
+      void initResult.then(handlePositions);
+    } else {
+      handlePositions(initResult);
+    }
   }, [nodes, edges, communityFn, nodeColorFn, refs]);
 
   useEffect(() => {
@@ -49,7 +63,7 @@ export function useGraphonUpdates<N, E>(
     const renderer = refs.renderer.current;
     if (!physics || !renderer) return;
 
-    physics.resize(width, height);
+    void physics.resize(width, height);
     renderer.resize(width, height);
   }, [width, height, refs]);
 }

@@ -1,4 +1,4 @@
-import type { Edge, Node, PhysicsSimulation, PixiRenderer, Position } from '@graphon/core';
+import type { Edge, Node, PhysicsEngine, PixiRenderer, Position } from '@graphon/core';
 import type { GraphonRefs } from './useGraphonRefs';
 
 export interface HandlerCallbacks<N, E> {
@@ -14,7 +14,7 @@ export interface HandlerCallbacks<N, E> {
 export interface DragMoveParams<N, E> {
   pos: Position;
   renderer: PixiRenderer<N, E>;
-  physics: PhysicsSimulation<N, E>;
+  physics: PhysicsEngine<N, E>;
   refs: GraphonRefs<N, E>;
   callbacks: HandlerCallbacks<N, E>;
 }
@@ -32,14 +32,15 @@ export function getMousePos(event: React.MouseEvent<HTMLDivElement>): Position {
 export function handleDragStart<N, E>(
   pos: Position,
   renderer: PixiRenderer<N, E>,
-  physics: PhysicsSimulation<N, E>,
+  physics: PhysicsEngine<N, E>,
   refs: GraphonRefs<N, E>
 ): boolean {
   const hit = renderer.hitTest(pos.x, pos.y);
   if (hit.type === 'node' && hit.node) {
     refs.dragState.current = { nodeId: hit.node.id };
     refs.isDragging.current = true;
-    physics.pinNode(hit.node.id);
+    // Fire-and-forget for both sync and async physics
+    void physics.pinNode(hit.node.id);
     return true;
   }
   return false;
@@ -53,12 +54,13 @@ export function handleDragMove<N, E>(params: DragMoveParams<N, E>): void {
   const viewport = renderer.getViewport();
   const worldX = (pos.x - viewport.x) / viewport.scale;
   const worldY = (pos.y - viewport.y) / viewport.scale;
-  physics.setNodePosition(nodeId, { x: worldX, y: worldY });
+  // Fire-and-forget for both sync and async physics
+  void physics.setNodePosition(nodeId, { x: worldX, y: worldY });
   callbacks.onNodeDrag?.(nodeId, { x: worldX, y: worldY });
 }
 
 export function handleDragEnd<N, E>(
-  physics: PhysicsSimulation<N, E>,
+  physics: PhysicsEngine<N, E>,
   refs: GraphonRefs<N, E>,
   callbacks: HandlerCallbacks<N, E>
 ): void {
@@ -67,7 +69,8 @@ export function handleDragEnd<N, E>(
 
   const positions = physics.getPositions();
   const finalPos = positions.get(nodeId);
-  physics.unpinNode(nodeId);
+  // Fire-and-forget for both sync and async physics
+  void physics.unpinNode(nodeId);
   if (finalPos) callbacks.onNodeDragEnd?.(nodeId, finalPos);
   refs.dragState.current = undefined;
   refs.isDragging.current = false;

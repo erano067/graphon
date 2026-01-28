@@ -1,11 +1,13 @@
 import type { Edge, Node, Position, PositionMap } from '../model/types';
-import { DEFAULT_PHYSICS_CONFIG, type NodeState, type PhysicsConfig } from './types';
+import {
+  DEFAULT_PHYSICS_CONFIG,
+  type NodeState,
+  type PhysicsConfig,
+  SETTLE_THRESHOLD,
+} from './types';
 import { buildQuadtree } from './Quadtree';
 import { applyForce, applyVelocities, computeForces } from './forces';
 import { computeCommunityPositions, createInitialNodeState } from './positions';
-
-/** Threshold for kinetic energy below which simulation is considered settled. */
-const SETTLE_THRESHOLD = 0.5;
 
 export class PhysicsSimulation<N = Record<string, unknown>, E = Record<string, unknown>> {
   private config: PhysicsConfig;

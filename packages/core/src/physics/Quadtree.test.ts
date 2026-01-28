@@ -8,7 +8,7 @@ function createNodeState(id: string, x: number, y: number): NodeState {
 
 describe('Quadtree', () => {
   describe('buildQuadtree', () => {
-    it('creates a quadtree from node states', () => {
+    it('creates a quadtree from node states with dynamic bounds', () => {
       const states: NodeState[] = [
         createNodeState('a', 100, 100),
         createNodeState('b', 200, 200),
@@ -18,9 +18,10 @@ describe('Quadtree', () => {
       const tree = buildQuadtree(states, 800, 600);
 
       expect(tree).toBeDefined();
-      expect(tree.x).toBe(0);
-      expect(tree.y).toBe(0);
-      expect(tree.width).toBe(800);
+      // Bounds computed from nodes: min (100,100) to max (300,300) with 100px margin
+      expect(tree.x).toBe(0); // 100 - 100 margin
+      expect(tree.y).toBe(0); // 100 - 100 margin
+      expect(tree.width).toBe(400); // max(400-0, 400-0) = 400
     });
 
     it('handles empty node list', () => {
@@ -28,6 +29,22 @@ describe('Quadtree', () => {
 
       expect(tree).toBeDefined();
       expect(tree.mass).toBe(0);
+    });
+
+    it('handles nodes at negative coordinates', () => {
+      const states: NodeState[] = [
+        createNodeState('a', -200, -100),
+        createNodeState('b', 200, 100),
+      ];
+
+      const tree = buildQuadtree(states, 800, 600);
+
+      expect(tree).toBeDefined();
+      // Bounds: min (-200,-100) to max (200,100) with 100px margin
+      expect(tree.x).toBe(-300); // -200 - 100 margin
+      expect(tree.y).toBe(-200); // -100 - 100 margin
+      // size = max(300-(-300), 200-(-200)) = max(600, 400) = 600
+      expect(tree.width).toBe(600);
     });
 
     it('handles single node', () => {

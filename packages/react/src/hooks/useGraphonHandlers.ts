@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import type { PhysicsSimulation } from '@graphon/core';
+import type { PhysicsEngine } from '@graphon/core';
 import type { GraphonRefs } from './useGraphonRefs';
 import {
   type HandlerCallbacks,
@@ -36,10 +36,10 @@ interface GraphonHandlers {
 function cleanupOnLeave<N, E>(
   refs: GraphonRefs<N, E>,
   callbacks: HandlerCallbacks<N, E>,
-  physics: PhysicsSimulation<N, E> | undefined
+  physics: PhysicsEngine<N, E> | undefined
 ): void {
   if (refs.dragState.current && refs.isDragging.current && physics) {
-    physics.unpinNode(refs.dragState.current.nodeId);
+    void physics.unpinNode(refs.dragState.current.nodeId);
     refs.dragState.current = undefined;
     refs.isDragging.current = false;
   }

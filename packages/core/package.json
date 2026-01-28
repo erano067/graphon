@@ -19,6 +19,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "comlink": "^4.4.2",
     "graphology": "^0.26.0",
     "graphology-types": "^0.24.8",
     "pixi.js": "^8.15.0"

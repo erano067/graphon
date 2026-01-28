@@ -1,5 +1,12 @@
 import { useEffect, useRef } from 'react';
-import type { Edge, Node, NodeColorFn, PhysicsSimulation, PixiRenderer } from '@graphon/core';
+import type {
+  Edge,
+  Node,
+  NodeColorFn,
+  PhysicsEngine,
+  PhysicsWorkerClient,
+  PixiRenderer,
+} from '@graphon/core';
 
 export interface PanState {
   startX: number;
@@ -11,7 +18,8 @@ export interface PanState {
 export interface GraphonRefs<N, E> {
   container: React.RefObject<HTMLDivElement | null>;
   renderer: React.RefObject<PixiRenderer<N, E> | undefined>;
-  physics: React.RefObject<PhysicsSimulation<N, E> | undefined>;
+  physics: React.RefObject<PhysicsEngine<N, E> | undefined>;
+  workerClient: React.RefObject<PhysicsWorkerClient<N, E> | undefined>;
   animation: React.RefObject<number | undefined>;
   graphKey: React.RefObject<string>;
   hoveredNode: React.RefObject<string | undefined>;
@@ -33,7 +41,8 @@ export function useGraphonRefs<N, E>(
 ): GraphonRefs<N, E> {
   const containerRef = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<PixiRenderer<N, E> | undefined>(undefined);
-  const physicsRef = useRef<PhysicsSimulation<N, E> | undefined>(undefined);
+  const physicsRef = useRef<PhysicsEngine<N, E> | undefined>(undefined);
+  const workerClientRef = useRef<PhysicsWorkerClient<N, E> | undefined>(undefined);
   const animationRef = useRef<number | undefined>(undefined);
   const graphKeyRef = useRef('');
   const hoveredNodeRef = useRef<string | undefined>(undefined);
@@ -63,6 +72,7 @@ export function useGraphonRefs<N, E>(
     container: containerRef,
     renderer: rendererRef,
     physics: physicsRef,
+    workerClient: workerClientRef,
     animation: animationRef,
     graphKey: graphKeyRef,
     hoveredNode: hoveredNodeRef,

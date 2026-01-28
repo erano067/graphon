@@ -30,4 +30,17 @@ export {
   DEFAULT_FORCE_OPTIONS,
 } from './layout';
 
-export { PhysicsSimulation, createPhysicsSimulation } from './physics';
+export {
+  PhysicsSimulation,
+  createPhysicsSimulation,
+  PhysicsWorkerClient,
+  supportsWebWorkers,
+  isAsyncPhysicsEngine,
+  DEFAULT_PHYSICS_CONFIG,
+} from './physics';
+export type {
+  PhysicsConfig,
+  NodeState,
+  PhysicsWorkerClientOptions,
+  PhysicsEngine,
+} from './physics';
