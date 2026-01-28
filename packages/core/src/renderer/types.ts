@@ -40,6 +40,12 @@ export interface RenderConfig {
   edgeStyle: EdgeStyle;
   /** Canvas background color as hex number */
   backgroundColor: number;
+  /**
+   * Node count threshold for simplified rendering mode.
+   * Above this threshold, nodes render without strokes and at 60% radius.
+   * @default 1000
+   */
+  largeGraphThreshold: number;
 }
 
 /**
@@ -139,4 +145,5 @@ export const DEFAULT_RENDER_CONFIG: RenderConfig = {
   nodeStyle: DEFAULT_NODE_STYLE,
   edgeStyle: DEFAULT_EDGE_STYLE,
   backgroundColor: 0xffffff,
+  largeGraphThreshold: 1000,
 };

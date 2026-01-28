@@ -9,6 +9,7 @@ import {
   type Viewport,
 } from './types';
 import { findEdgeAt, findNodeAt, screenToWorld } from './hitTesting';
+import { drawNodeGroup, groupNodesByColor } from './renderHelpers';
 
 export class PixiRenderer<
   N = Record<string, unknown>,
@@ -17,7 +18,7 @@ export class PixiRenderer<
   private app?: Application;
   private graphContainer?: Container;
   private edgeGraphics?: Graphics;
-  private nodeGraphics = new Map<string, Graphics>();
+  private nodeGraphics?: Graphics;
   private config: RenderConfig;
   private viewport: Viewport = { x: 0, y: 0, scale: 1 };
   private currentNodes: Node<N>[] = [];
@@ -61,7 +62,9 @@ export class PixiRenderer<
     this.graphContainer = new Container();
     app.stage.addChild(this.graphContainer);
     this.edgeGraphics = new Graphics();
+    this.nodeGraphics = new Graphics();
     this.graphContainer.addChild(this.edgeGraphics);
+    this.graphContainer.addChild(this.nodeGraphics);
   }
 
   unmount(app?: Application): void {
@@ -105,20 +108,11 @@ export class PixiRenderer<
   hitTest(screenX: number, screenY: number): HitTestResult<N, E> {
     const worldPos = screenToWorld(screenX, screenY, this.viewport);
 
-    const hitNode = findNodeAt(
-      worldPos,
-      this.currentNodes,
-      this.positions,
-      this.config.nodeStyle.radius
-    );
+    const { nodeStyle, edgeStyle } = this.config;
+    const hitNode = findNodeAt(worldPos, this.currentNodes, this.positions, nodeStyle.radius);
     if (hitNode) return { type: 'node', node: hitNode, position: worldPos };
 
-    const hitEdge = findEdgeAt(
-      worldPos,
-      this.currentEdges,
-      this.positions,
-      this.config.edgeStyle.width + 4
-    );
+    const hitEdge = findEdgeAt(worldPos, this.currentEdges, this.positions, edgeStyle.width + 4);
     if (hitEdge) return { type: 'edge', edge: hitEdge, position: worldPos };
 
     return { type: 'canvas', position: worldPos };
@@ -126,24 +120,19 @@ export class PixiRenderer<
 
   destroy(): void {
     this.destroyed = true;
-    const { app } = this;
-    const { graphContainer } = this;
-    const { edgeGraphics } = this;
+    const { app, graphContainer, edgeGraphics, nodeGraphics } = this;
 
     delete this.app;
     delete this.graphContainer;
     delete this.edgeGraphics;
+    delete this.nodeGraphics;
 
     if (!app) return;
 
     this.unmount(app);
 
-    for (const g of this.nodeGraphics.values()) {
-      g.destroy();
-    }
-    this.nodeGraphics.clear();
-
     try {
+      nodeGraphics?.destroy();
       edgeGraphics?.destroy();
       graphContainer?.destroy();
       app.destroy(true);
@@ -155,75 +144,51 @@ export class PixiRenderer<
   private renderEdges(edges: Edge<E>[]): void {
     if (!this.edgeGraphics) return;
     this.edgeGraphics.clear();
-    const style = this.config.edgeStyle;
 
+    if (edges.length === 0) return;
+
+    const style = this.config.edgeStyle;
+    const g = this.edgeGraphics;
+
+    // Batch all edge paths, then stroke once
     for (const edge of edges) {
       const source = this.positions.get(edge.source);
       const target = this.positions.get(edge.target);
       if (!source || !target) continue;
 
-      this.edgeGraphics
-        .moveTo(source.x, source.y)
-        .lineTo(target.x, target.y)
-        .stroke({ width: style.width, color: style.color, alpha: style.alpha });
+      g.moveTo(source.x, source.y);
+      g.lineTo(target.x, target.y);
     }
+
+    g.stroke({ width: style.width, color: style.color, alpha: style.alpha });
   }
 
   private renderNodes(nodes: Node<N>[], colorFn?: (node: { id: string; data: N }) => number): void {
-    if (!this.graphContainer) return;
+    if (!this.nodeGraphics) return;
+    this.nodeGraphics.clear();
 
-    this.removeStaleNodes(nodes);
+    if (nodes.length === 0) return;
 
-    for (const node of nodes) {
-      const pos = this.positions.get(node.id);
-      if (!pos) continue;
+    const isLargeGraph = nodes.length > this.config.largeGraphThreshold;
+    const baseRadius = this.config.nodeStyle.radius;
+    const radius = isLargeGraph ? Math.max(2, baseRadius * 0.6) : baseRadius;
+    const colorGroups = groupNodesByColor(
+      nodes,
+      this.positions,
+      colorFn,
+      this.config.nodeStyle.fill
+    );
 
-      const graphics = this.getOrCreateNodeGraphics(node.id);
-      const color = colorFn ? colorFn(node) : this.config.nodeStyle.fill;
-
-      this.drawNode(graphics, color);
-      graphics.position.set(pos.x, pos.y);
-    }
-  }
-
-  private removeStaleNodes(nodes: Node<N>[]): void {
-    const currentIds = new Set(nodes.map((n) => n.id));
-    for (const [id, graphics] of this.nodeGraphics) {
-      if (currentIds.has(id)) continue;
-      this.graphContainer?.removeChild(graphics);
-      graphics.destroy();
-      this.nodeGraphics.delete(id);
-    }
-  }
-
-  private getOrCreateNodeGraphics(id: string): Graphics {
-    const existing = this.nodeGraphics.get(id);
-    if (existing) return existing;
-
-    const graphics = new Graphics();
-    this.graphContainer?.addChild(graphics);
-    this.nodeGraphics.set(id, graphics);
-    return graphics;
-  }
-
-  private drawNode(graphics: Graphics, color: number): void {
-    const style = this.config.nodeStyle;
-    graphics.clear();
-    graphics
-      .circle(0, 0, style.radius)
-      .fill({ color, alpha: style.fillAlpha })
-      .stroke({
-        width: style.strokeWidth,
-        color: this.darkenColor(color, 0.3),
-        alpha: style.strokeAlpha,
+    for (const [color, positions] of colorGroups) {
+      drawNodeGroup({
+        graphics: this.nodeGraphics,
+        positions,
+        radius,
+        color,
+        isSimplified: isLargeGraph,
+        style: this.config.nodeStyle,
       });
-  }
-
-  private darkenColor(color: number, factor: number): number {
-    const r = Math.floor(((color >> 16) & 0xff) * (1 - factor));
-    const g = Math.floor(((color >> 8) & 0xff) * (1 - factor));
-    const b = Math.floor((color & 0xff) * (1 - factor));
-    return (r << 16) | (g << 8) | b;
+    }
   }
 
   private applyViewport(): void {
