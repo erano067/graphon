@@ -9,7 +9,7 @@ import {
   type Viewport,
 } from './types';
 import { findEdgeAt, findNodeAt, screenToWorld } from './hitTesting';
-import { drawNodeGroup, groupNodesByColor } from './renderHelpers';
+import { renderNodes } from './renderNodes';
 
 export class PixiRenderer<
   N = Record<string, unknown>,
@@ -101,7 +101,7 @@ export class PixiRenderer<
       this.renderEdges(edges);
     }
 
-    this.renderNodes(nodes, options?.nodeColorFn);
+    this.renderNodesInternal(nodes, options);
     this.applyViewport();
   }
 
@@ -171,33 +171,16 @@ export class PixiRenderer<
 
     g.stroke({ width: style.width, color: style.color, alpha: style.alpha });
   }
-
-  private renderNodes(nodes: Node<N>[], colorFn?: (node: { id: string; data: N }) => number): void {
+  private renderNodesInternal(nodes: Node<N>[], options?: RenderOptions<N>): void {
     if (!this.nodeGraphics) return;
-    this.nodeGraphics.clear();
-
-    if (nodes.length === 0) return;
-
-    const isLargeGraph = nodes.length > this.config.largeGraphThreshold;
-    const baseRadius = this.config.nodeStyle.radius;
-    const radius = isLargeGraph ? Math.max(2, baseRadius * 0.6) : baseRadius;
-    const colorGroups = groupNodesByColor(
+    renderNodes({
+      graphics: this.nodeGraphics,
       nodes,
-      this.positions,
-      colorFn,
-      this.config.nodeStyle.fill
-    );
-
-    for (const [color, positions] of colorGroups) {
-      drawNodeGroup({
-        graphics: this.nodeGraphics,
-        positions,
-        radius,
-        color,
-        isSimplified: isLargeGraph,
-        style: this.config.nodeStyle,
-      });
-    }
+      positions: this.positions,
+      nodeStyle: this.config.nodeStyle,
+      largeGraphThreshold: this.config.largeGraphThreshold,
+      ...(options && { options }),
+    });
   }
 
   private applyViewport(): void {
@@ -207,8 +190,6 @@ export class PixiRenderer<
   }
 }
 
-export function createRenderer<N = Record<string, unknown>, E = Record<string, unknown>>(
+export const createRenderer = <N = Record<string, unknown>, E = Record<string, unknown>>(
   config?: Partial<RenderConfig>
-): PixiRenderer<N, E> {
-  return new PixiRenderer<N, E>(config);
-}
+): PixiRenderer<N, E> => new PixiRenderer<N, E>(config);

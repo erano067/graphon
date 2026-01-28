@@ -4,6 +4,10 @@
 
 - **Never run `pnpm dev`** — The user manages the dev server themselves. Only run build, test, lint, and typecheck commands.
 
+## Forbidden Practices
+
+- **Never add backward compatibility code** — This is a greenfield project with no legacy users. No deprecated APIs, no `@deprecated` tags, no eslint-disable for deprecated warnings, no legacy fallbacks.
+
 ---
 
 ## Critical Self-Review

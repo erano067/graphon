@@ -30,9 +30,7 @@ export function Sidebar({
 
       <Legend communityCount={communityCount} getCommunityColor={getCommunityColor} />
 
-      <p style={{ fontSize: 12, color: '#666', marginTop: 16 }}>
-        Drag nodes to see spring physics!
-      </p>
+      <FeaturesShowcase />
 
       {hoveredNode && (
         <NodeCard title="Hovered" node={hoveredNode} getCommunityColor={getCommunityColor} />
@@ -107,6 +105,34 @@ function NodeCard({ title, node, getCommunityColor, showId }: NodeCardProps) {
         </>
       )}
       <small>Community {node.data.community + 1}</small>
+    </div>
+  );
+}
+
+const FEATURES = [
+  { icon: '🎨', label: 'Node colors by community' },
+  { icon: '⬡', label: 'Node shapes (circle, square, diamond)' },
+  { icon: '🖱️', label: 'Click nodes to select' },
+  { icon: '👆', label: 'Hover for highlights' },
+  { icon: '✋', label: 'Drag nodes (spring physics)' },
+  { icon: '🔍', label: 'Scroll to zoom' },
+  { icon: '🖐️', label: 'Drag canvas to pan' },
+  { icon: '⚡', label: 'WebGL rendering (PixiJS)' },
+  { icon: '🧵', label: 'Physics in Web Worker' },
+];
+
+function FeaturesShowcase() {
+  return (
+    <div style={{ marginTop: 16 }}>
+      <strong>Features:</strong>
+      <ul style={{ margin: '8px 0', paddingLeft: 0, listStyle: 'none', fontSize: 12 }}>
+        {FEATURES.map((feature) => (
+          <li key={feature.label} style={{ marginBottom: 4 }}>
+            <span style={{ marginRight: 6 }}>{feature.icon}</span>
+            {feature.label}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

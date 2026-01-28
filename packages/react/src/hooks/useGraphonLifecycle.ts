@@ -6,7 +6,8 @@ interface LifecycleOptions<N> {
   width: number;
   height: number;
   isAnimated: boolean;
-  communityFn: ((node: Node<N>) => number) | undefined;
+  communityFn?: (node: Node<N>) => number;
+  createWorkerFn?: () => Worker;
 }
 
 function computeGraphKey(nodes: { id: string }[], edges: { id: string }[]): string {
@@ -27,12 +28,12 @@ function createAnimationLoop<N, E>(refs: GraphonRefs<N, E>): () => void {
   const MIN_FRAME_TIME = 16;
 
   const runTick = async (): Promise<void> => {
-    const { workerClient, renderer, nodes, edges, nodeColorFn, isInteracting } = refs;
+    const { workerClient, renderer, nodes, edges, nodeStyleFn, isInteracting } = refs;
     if (!workerClient.current || !renderer.current) return;
 
     const positions = await workerClient.current.tick();
     renderer.current.render(nodes.current, edges.current, positions, {
-      nodeColorFn: nodeColorFn.current,
+      ...(nodeStyleFn.current && { nodeStyleFn: nodeStyleFn.current }),
       isInteracting: isInteracting.current,
     });
   };
@@ -73,20 +74,21 @@ function createAnimationLoop<N, E>(refs: GraphonRefs<N, E>): () => void {
 interface InitializerParams<N, E> {
   refs: GraphonRefs<N, E>;
   renderer: ReturnType<typeof createRenderer<N, E>>;
-  options: { width: number; height: number; isAnimated: boolean };
-  communityFn: ((node: Node<N>) => number) | undefined;
+  options: { width: number; height: number; isAnimated: boolean; createWorkerFn?: () => Worker };
+  communityFn?: (node: Node<N>) => number;
   startAnimationLoop: () => void;
 }
 
 async function initializeWorker<N, E>(params: InitializerParams<N, E>): Promise<void> {
   const { refs, renderer, options, communityFn, startAnimationLoop } = params;
-  const { width, height, isAnimated } = options;
+  const { width, height, isAnimated, createWorkerFn } = options;
   const container = refs.container.current;
   if (!container) return;
 
   const workerClient = new PhysicsWorkerClient<N, E>({
     config: { width, height },
     ...(communityFn && { communityFn }),
+    ...(createWorkerFn && { createWorker: createWorkerFn }),
   });
 
   await renderer.mount(container);
@@ -97,7 +99,7 @@ async function initializeWorker<N, E>(params: InitializerParams<N, E>): Promise<
   const positions = await workerClient.initialize(refs.nodes.current, refs.edges.current);
   renderer.resize(width, height);
   renderer.render(refs.nodes.current, refs.edges.current, positions, {
-    nodeColorFn: refs.nodeColorFn.current,
+    ...(refs.nodeStyleFn.current && { nodeStyleFn: refs.nodeStyleFn.current }),
   });
   refs.graphKey.current = computeGraphKey(refs.nodes.current, refs.edges.current);
   if (isAnimated) startAnimationLoop();
@@ -107,7 +109,7 @@ export function useGraphonLifecycle<N, E>(
   refs: GraphonRefs<N, E>,
   options: LifecycleOptions<N>
 ): void {
-  const { width, height, isAnimated, communityFn } = options;
+  const { width, height, isAnimated, communityFn, createWorkerFn } = options;
 
   const startAnimationLoop = useCallback((): void => {
     createAnimationLoop(refs)();
@@ -121,8 +123,8 @@ export function useGraphonLifecycle<N, E>(
     const initParams = {
       refs,
       renderer,
-      options: { width, height, isAnimated },
-      communityFn,
+      options: { width, height, isAnimated, ...(createWorkerFn && { createWorkerFn }) },
+      ...(communityFn && { communityFn }),
       startAnimationLoop,
     };
 

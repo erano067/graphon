@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import type {
   Edge,
   Node,
-  NodeColorFn,
+  NodeStyleFn,
   PhysicsEngine,
   PhysicsWorkerClient,
   PixiRenderer,
@@ -31,13 +31,13 @@ export interface GraphonRefs<N, E> {
   panState: React.RefObject<PanState | undefined>;
   nodes: React.RefObject<Node<N>[]>;
   edges: React.RefObject<Edge<E>[]>;
-  nodeColorFn: React.RefObject<NodeColorFn<N> | undefined>;
+  nodeStyleFn: React.RefObject<NodeStyleFn<N> | undefined>;
 }
 
 export function useGraphonRefs<N, E>(
   nodes: Node<N>[],
   edges: Edge<E>[],
-  nodeColorFn?: NodeColorFn<N>
+  nodeStyleFn?: NodeStyleFn<N>
 ): GraphonRefs<N, E> {
   const containerRef = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<PixiRenderer<N, E> | undefined>(undefined);
@@ -54,7 +54,7 @@ export function useGraphonRefs<N, E>(
   const panStateRef = useRef<PanState | undefined>(undefined);
   const nodesRef = useRef(nodes);
   const edgesRef = useRef(edges);
-  const nodeColorFnRef = useRef(nodeColorFn);
+  const nodeStyleFnRef = useRef(nodeStyleFn);
 
   useEffect(() => {
     nodesRef.current = nodes;
@@ -65,8 +65,8 @@ export function useGraphonRefs<N, E>(
   }, [edges]);
 
   useEffect(() => {
-    nodeColorFnRef.current = nodeColorFn;
-  }, [nodeColorFn]);
+    nodeStyleFnRef.current = nodeStyleFn;
+  }, [nodeStyleFn]);
 
   return {
     container: containerRef,
@@ -84,6 +84,6 @@ export function useGraphonRefs<N, E>(
     panState: panStateRef,
     nodes: nodesRef,
     edges: edgesRef,
-    nodeColorFn: nodeColorFnRef,
+    nodeStyleFn: nodeStyleFnRef,
   };
 }

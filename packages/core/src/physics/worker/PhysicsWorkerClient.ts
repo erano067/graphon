@@ -163,10 +163,14 @@ export class PhysicsWorkerClient<N = Record<string, unknown>, E = Record<string,
   private ensureWorker(): void {
     if (this.worker) return;
 
-    this.worker = this.createWorkerFn
-      ? this.createWorkerFn()
-      : new Worker(new URL('./physics.worker.ts', import.meta.url), { type: 'module' });
+    if (!this.createWorkerFn) {
+      throw new Error(
+        'PhysicsWorkerClient requires a createWorker function. ' +
+          'Example: new PhysicsWorkerClient({ createWorker: () => new MyPhysicsWorker() })'
+      );
+    }
 
+    this.worker = this.createWorkerFn();
     this.api = Comlink.wrap<PhysicsWorkerAPI>(this.worker);
   }
 

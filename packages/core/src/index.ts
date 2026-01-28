@@ -9,7 +9,9 @@ export type {
   RenderConfig,
   NodeStyle,
   EdgeStyle,
-  NodeColorFn,
+  NodeStyleFn,
+  NodeShape,
+  ResolvedNodeVisuals,
   RenderOptions,
 } from './renderer';
 export {
@@ -18,6 +20,7 @@ export {
   DEFAULT_NODE_STYLE,
   DEFAULT_EDGE_STYLE,
   DEFAULT_RENDER_CONFIG,
+  DEFAULT_NODE_VISUALS,
 } from './renderer';
 
 export type { Layout, LayoutType, LayoutOptions, ForceLayoutOptions } from './layout';
@@ -34,6 +37,7 @@ export {
   PhysicsSimulation,
   createPhysicsSimulation,
   PhysicsWorkerClient,
+  PhysicsWorkerCore,
   supportsWebWorkers,
   isAsyncPhysicsEngine,
   DEFAULT_PHYSICS_CONFIG,

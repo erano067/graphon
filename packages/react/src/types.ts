@@ -1,4 +1,4 @@
-import type { Edge, Node, Position } from '@graphon/core';
+import type { Edge, Node, Position, ResolvedNodeVisuals } from '@graphon/core';
 
 /**
  * Props for the Graphon React component.
@@ -42,10 +42,20 @@ export interface GraphonProps<N = Record<string, unknown>, E = Record<string, un
   minZoom?: number;
   /** Maximum zoom scale @default 4 */
   maxZoom?: number;
-  /** Function to determine node color from data */
-  nodeColorFn?: (node: Node<N>) => number;
+  /** Function to determine node visual style (color, shape, radius). */
+  nodeStyleFn?: (node: Node<N>) => Partial<ResolvedNodeVisuals>;
   /** Function to determine node community for clustering */
   communityFn?: (node: Node<N>) => number;
+  /**
+   * Factory function to create the physics web worker.
+   * Required for Vite and other bundlers that need explicit worker imports.
+   * @example
+   * ```tsx
+   * import PhysicsWorker from '@graphon/core/physics.worker?worker';
+   * <Graphon createWorkerFn={() => new PhysicsWorker()} ... />
+   * ```
+   */
+  createWorkerFn?: () => Worker;
   /** Callback when a node is clicked */
   onNodeClick?: (node: Node<N>) => void;
   /** Callback when mouse hovers over/leaves a node */

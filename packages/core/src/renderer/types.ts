@@ -1,4 +1,5 @@
 import type { Edge, Node, PositionMap } from '../model/types';
+import type { NodeShape, ResolvedNodeVisuals } from './shapes';
 
 /**
  * Visual styling options for nodes.
@@ -49,12 +50,13 @@ export interface RenderConfig {
 }
 
 /**
- * Function that determines a node's color based on its data.
+ * Function that determines a node's visual style based on its data.
+ * Return partial styles - unspecified properties use defaults.
  * @typeParam N - Node data type
- * @param node - The node to get the color for
- * @returns Hex color as a number (e.g., 0xff0000 for red)
  */
-export type NodeColorFn<N> = (node: { id: string; data: N }) => number;
+export type NodeStyleFn<N> = (node: { id: string; data: N }) => Partial<ResolvedNodeVisuals>;
+
+export type { NodeShape, ResolvedNodeVisuals };
 
 /**
  * Represents the current viewport state (pan and zoom).
@@ -89,8 +91,8 @@ export interface HitTestResult<N, E> {
  * @typeParam N - Node data type
  */
 export interface RenderOptions<N> {
-  /** Optional function to customize node colors */
-  nodeColorFn?: NodeColorFn<N> | undefined;
+  /** Function to customize node visuals (color, shape, size). */
+  nodeStyleFn?: NodeStyleFn<N>;
   /**
    * If true, user is actively interacting (panning/zooming).
    * Renderer may skip expensive operations like edge rendering for large graphs.

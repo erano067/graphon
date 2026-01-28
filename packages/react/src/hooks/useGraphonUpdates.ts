@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import type { Edge, Node, NodeColorFn, PhysicsSimulation, PositionMap } from '@graphon/core';
+import type { Edge, Node, NodeStyleFn, PhysicsSimulation, PositionMap } from '@graphon/core';
 import type { GraphonRefs } from './useGraphonRefs';
 
 function computeGraphKey(nodes: { id: string }[], edges: { id: string }[]): string {
@@ -18,7 +18,7 @@ interface UpdateOptions<N> {
   width: number;
   height: number;
   communityFn: ((node: { id: string; data: N }) => number) | undefined;
-  nodeColorFn: NodeColorFn<N> | undefined;
+  nodeStyleFn: NodeStyleFn<N> | undefined;
 }
 
 export function useGraphonUpdates<N, E>(
@@ -27,7 +27,7 @@ export function useGraphonUpdates<N, E>(
   edges: Edge<E>[],
   options: UpdateOptions<N>
 ): void {
-  const { width, height, communityFn, nodeColorFn } = options;
+  const { width, height, communityFn, nodeStyleFn } = options;
 
   useEffect(() => {
     const physics = refs.physics.current;
@@ -48,7 +48,9 @@ export function useGraphonUpdates<N, E>(
 
     // Handle both sync and async initialize
     const handlePositions = (positions: PositionMap): void => {
-      renderer.render(nodes, edges, positions, { nodeColorFn });
+      renderer.render(nodes, edges, positions, {
+        ...(nodeStyleFn && { nodeStyleFn }),
+      });
     };
 
     if (initResult instanceof Promise) {
@@ -56,7 +58,7 @@ export function useGraphonUpdates<N, E>(
     } else {
       handlePositions(initResult);
     }
-  }, [nodes, edges, communityFn, nodeColorFn, refs]);
+  }, [nodes, edges, communityFn, nodeStyleFn, refs]);
 
   useEffect(() => {
     const physics = refs.physics.current;

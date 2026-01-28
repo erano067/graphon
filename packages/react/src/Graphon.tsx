@@ -39,33 +39,45 @@ import { useGraphonUpdates } from './hooks/useGraphonUpdates';
  * }
  * ```
  */
-export function Graphon<N = Record<string, unknown>, E = Record<string, unknown>>({
-  nodes,
-  edges,
-  width = 800,
-  height = 600,
-  className,
-  style,
-  isAnimated = true,
-  isDraggable = true,
-  isPannable = true,
-  isZoomable = true,
-  minZoom = 0.1,
-  maxZoom = 4,
-  nodeColorFn,
-  communityFn,
-  onNodeClick,
-  onNodeHover,
-  onNodeDrag,
-  onNodeDragEnd,
-  onEdgeClick,
-  onEdgeHover,
-  onCanvasClick,
-}: GraphonProps<N, E>) {
-  const refs = useGraphonRefs(nodes, edges, nodeColorFn);
+// eslint-disable-next-line complexity -- many props are standard for a component API
+export function Graphon<N = Record<string, unknown>, E = Record<string, unknown>>(
+  props: GraphonProps<N, E>
+) {
+  const {
+    nodes,
+    edges,
+    width = 800,
+    height = 600,
+    className,
+    style,
+    isAnimated = true,
+    isDraggable = true,
+    isPannable = true,
+    isZoomable = true,
+    minZoom = 0.1,
+    maxZoom = 4,
+    nodeStyleFn,
+    communityFn,
+    createWorkerFn,
+    onNodeClick,
+    onNodeHover,
+    onNodeDrag,
+    onNodeDragEnd,
+    onEdgeClick,
+    onEdgeHover,
+    onCanvasClick,
+  } = props;
 
-  useGraphonLifecycle(refs, { width, height, isAnimated, communityFn });
-  useGraphonUpdates(refs, nodes, edges, { width, height, communityFn, nodeColorFn });
+  const refs = useGraphonRefs(nodes, edges, nodeStyleFn);
+
+  useGraphonLifecycle(refs, {
+    width,
+    height,
+    isAnimated,
+    ...(communityFn && { communityFn }),
+    ...(createWorkerFn && { createWorkerFn }),
+  });
+  useGraphonUpdates(refs, nodes, edges, { width, height, communityFn, nodeStyleFn });
 
   const handlers = useGraphonHandlers(
     refs,
@@ -81,24 +93,15 @@ export function Graphon<N = Record<string, unknown>, E = Record<string, unknown>
     { isDraggable, isPannable, isZoomable, minZoom, maxZoom }
   );
 
-  const getCursor = (): string => {
-    if (refs.isDragging.current) return 'grabbing';
-    if (refs.isPanning.current) return 'grabbing';
-    return 'default';
-  };
-
   // Attach wheel listener with { passive: false } to allow preventDefault
   useEffect(() => {
     const container = refs.container.current;
     if (!container) return;
-
-    const wheelHandler = handlers.handleWheel;
-    container.addEventListener('wheel', wheelHandler, { passive: false });
-
-    return () => {
-      container.removeEventListener('wheel', wheelHandler);
-    };
+    container.addEventListener('wheel', handlers.handleWheel, { passive: false });
+    return () => container.removeEventListener('wheel', handlers.handleWheel);
   }, [refs.container, handlers.handleWheel]);
+
+  const cursor = refs.isDragging.current || refs.isPanning.current ? 'grabbing' : 'default';
 
   return (
     <div
@@ -109,7 +112,7 @@ export function Graphon<N = Record<string, unknown>, E = Record<string, unknown>
         height,
         position: 'relative',
         overflow: 'hidden',
-        cursor: getCursor(),
+        cursor,
         ...style,
       }}
       onMouseDown={handlers.handleMouseDown}
