@@ -60,17 +60,12 @@ export function applyForce(state: NodeState, force: Force, config: PhysicsConfig
   }
 }
 
-export function applyVelocities(states: NodeState[], config: PhysicsConfig): void {
-  const { padding, width, height } = config;
-
+export function applyVelocities(states: NodeState[]): void {
   for (const state of states) {
     if (state.pinned) continue;
 
     state.x += state.vx;
     state.y += state.vy;
-
-    state.x = Math.max(padding, Math.min(width - padding, state.x));
-    state.y = Math.max(padding, Math.min(height - padding, state.y));
   }
 }
 

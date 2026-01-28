@@ -22,12 +22,12 @@ export function Controls({
         <input
           type="range"
           min={20}
-          max={500}
+          max={20000}
           value={nodeCount}
           onChange={(e) => onNodeCountChange(Number(e.target.value))}
           style={{ marginLeft: 8 }}
         />
-        <span style={{ marginLeft: 8 }}>{nodeCount}</span>
+        <span style={{ marginLeft: 8 }}>{nodeCount.toLocaleString()}</span>
       </label>
 
       <label>

@@ -14,8 +14,7 @@
     "format": "prettier --write \"packages/**/*.{ts,tsx,json}\"",
     "format:check": "prettier --check \"packages/**/*.{ts,tsx,json}\"",
     "typecheck": "pnpm -r typecheck",
-    "check-all": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test",
-    "prepare": "husky"
+    "check-all": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",

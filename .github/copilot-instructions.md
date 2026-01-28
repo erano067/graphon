@@ -1,5 +1,11 @@
 # Copilot Coding Guidelines
 
+## Forbidden Commands
+
+- **Never run `pnpm dev`** — The user manages the dev server themselves. Only run build, test, lint, and typecheck commands.
+
+---
+
 ## Critical Self-Review
 
 Before every change, ask yourself:

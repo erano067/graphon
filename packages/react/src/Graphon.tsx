@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import type { GraphonProps } from './types';
 import { useGraphonRefs } from './hooks/useGraphonRefs';
 import { useGraphonHandlers } from './hooks/useGraphonHandlers';
@@ -45,8 +46,12 @@ export function Graphon<N = Record<string, unknown>, E = Record<string, unknown>
   height = 600,
   className,
   style,
-  animated = true,
-  draggable = true,
+  isAnimated = true,
+  isDraggable = true,
+  isPannable = true,
+  isZoomable = true,
+  minZoom = 0.1,
+  maxZoom = 4,
   nodeColorFn,
   communityFn,
   onNodeClick,
@@ -59,7 +64,7 @@ export function Graphon<N = Record<string, unknown>, E = Record<string, unknown>
 }: GraphonProps<N, E>) {
   const refs = useGraphonRefs(nodes, edges, nodeColorFn);
 
-  useGraphonLifecycle(refs, { width, height, animated, communityFn });
+  useGraphonLifecycle(refs, { width, height, isAnimated, communityFn });
   useGraphonUpdates(refs, nodes, edges, { width, height, communityFn, nodeColorFn });
 
   const handlers = useGraphonHandlers(
@@ -73,8 +78,27 @@ export function Graphon<N = Record<string, unknown>, E = Record<string, unknown>
       onEdgeHover,
       onCanvasClick,
     },
-    draggable
+    { isDraggable, isPannable, isZoomable, minZoom, maxZoom }
   );
+
+  const getCursor = (): string => {
+    if (refs.isDragging.current) return 'grabbing';
+    if (refs.isPanning.current) return 'grabbing';
+    return 'default';
+  };
+
+  // Attach wheel listener with { passive: false } to allow preventDefault
+  useEffect(() => {
+    const container = refs.container.current;
+    if (!container) return;
+
+    const wheelHandler = handlers.handleWheel;
+    container.addEventListener('wheel', wheelHandler, { passive: false });
+
+    return () => {
+      container.removeEventListener('wheel', wheelHandler);
+    };
+  }, [refs.container, handlers.handleWheel]);
 
   return (
     <div
@@ -85,7 +109,7 @@ export function Graphon<N = Record<string, unknown>, E = Record<string, unknown>
         height,
         position: 'relative',
         overflow: 'hidden',
-        cursor: refs.isDragging.current ? 'grabbing' : 'default',
+        cursor: getCursor(),
         ...style,
       }}
       onMouseDown={handlers.handleMouseDown}

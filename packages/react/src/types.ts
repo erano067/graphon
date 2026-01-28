@@ -31,9 +31,17 @@ export interface GraphonProps<N = Record<string, unknown>, E = Record<string, un
   /** Inline styles for the container */
   style?: React.CSSProperties;
   /** Enable physics animation @default true */
-  animated?: boolean;
+  isAnimated?: boolean;
   /** Enable node dragging @default true */
-  draggable?: boolean;
+  isDraggable?: boolean;
+  /** Enable canvas panning (drag on empty space) @default true */
+  isPannable?: boolean;
+  /** Enable mouse wheel zooming @default true */
+  isZoomable?: boolean;
+  /** Minimum zoom scale @default 0.1 */
+  minZoom?: number;
+  /** Maximum zoom scale @default 4 */
+  maxZoom?: number;
   /** Function to determine node color from data */
   nodeColorFn?: (node: Node<N>) => number;
   /** Function to determine node community for clustering */

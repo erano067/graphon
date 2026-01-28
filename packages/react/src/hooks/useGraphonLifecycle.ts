@@ -5,7 +5,7 @@ import type { GraphonRefs } from './useGraphonRefs';
 interface LifecycleOptions<N> {
   width: number;
   height: number;
-  animated: boolean;
+  isAnimated: boolean;
   communityFn: ((node: { id: string; data: N }) => number) | undefined;
 }
 
@@ -25,7 +25,7 @@ export function useGraphonLifecycle<N, E>(
   refs: GraphonRefs<N, E>,
   options: LifecycleOptions<N>
 ): void {
-  const { width, height, animated: isAnimated, communityFn } = options;
+  const { width, height, isAnimated, communityFn } = options;
 
   const startAnimationLoop = useCallback((): void => {
     const tick = (): void => {

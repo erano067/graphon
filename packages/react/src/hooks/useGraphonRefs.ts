@@ -1,6 +1,13 @@
 import { useEffect, useRef } from 'react';
 import type { Edge, Node, NodeColorFn, PhysicsSimulation, PixiRenderer } from '@graphon/core';
 
+export interface PanState {
+  startX: number;
+  startY: number;
+  viewportX: number;
+  viewportY: number;
+}
+
 export interface GraphonRefs<N, E> {
   container: React.RefObject<HTMLDivElement | null>;
   renderer: React.RefObject<PixiRenderer<N, E> | undefined>;
@@ -11,6 +18,8 @@ export interface GraphonRefs<N, E> {
   hoveredEdge: React.RefObject<string | undefined>;
   dragState: React.RefObject<{ nodeId: string } | undefined>;
   isDragging: React.RefObject<boolean>;
+  isPanning: React.RefObject<boolean>;
+  panState: React.RefObject<PanState | undefined>;
   nodes: React.RefObject<Node<N>[]>;
   edges: React.RefObject<Edge<E>[]>;
   nodeColorFn: React.RefObject<NodeColorFn<N> | undefined>;
@@ -30,6 +39,8 @@ export function useGraphonRefs<N, E>(
   const hoveredEdgeRef = useRef<string | undefined>(undefined);
   const dragStateRef = useRef<{ nodeId: string } | undefined>(undefined);
   const isDraggingRef = useRef(false);
+  const isPanningRef = useRef(false);
+  const panStateRef = useRef<PanState | undefined>(undefined);
   const nodesRef = useRef(nodes);
   const edgesRef = useRef(edges);
   const nodeColorFnRef = useRef(nodeColorFn);
@@ -56,6 +67,8 @@ export function useGraphonRefs<N, E>(
     hoveredEdge: hoveredEdgeRef,
     dragState: dragStateRef,
     isDragging: isDraggingRef,
+    isPanning: isPanningRef,
+    panState: panStateRef,
     nodes: nodesRef,
     edges: edgesRef,
     nodeColorFn: nodeColorFnRef,

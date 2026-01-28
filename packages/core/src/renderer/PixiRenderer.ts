@@ -43,6 +43,9 @@ export class PixiRenderer<
       antialias: true,
       resolution: window.devicePixelRatio || 1,
       autoDensity: true,
+      eventFeatures: {
+        wheel: false, // Disable PixiJS wheel handling - we handle zoom ourselves
+      },
     });
 
     if (this.destroyed || this.app !== app) {

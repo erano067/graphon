@@ -117,36 +117,34 @@ describe('forces', () => {
       const state = createNodeState('a', 100, 100);
       state.vx = 10;
       state.vy = -5;
-      const config = createConfig();
 
-      applyVelocities([state], config);
+      applyVelocities([state]);
 
       expect(state.x).toBe(110);
       expect(state.y).toBe(95);
     });
 
-    it('constrains positions within bounds', () => {
+    it('allows positions to move freely without boundaries', () => {
       const state = createNodeState('a', 10, 10);
       state.vx = -100;
       state.vy = -100;
-      const config = createConfig({ width: 800, height: 600, padding: 50 });
 
-      applyVelocities([state], config);
+      applyVelocities([state]);
 
-      expect(state.x).toBeGreaterThanOrEqual(50);
-      expect(state.y).toBeGreaterThanOrEqual(50);
+      expect(state.x).toBe(-90);
+      expect(state.y).toBe(-90);
     });
 
-    it('constrains positions at max bounds', () => {
-      const state = createNodeState('a', 790, 590);
-      state.vx = 100;
-      state.vy = 100;
-      const config = createConfig({ width: 800, height: 600, padding: 50 });
+    it('skips pinned nodes', () => {
+      const state = createNodeState('a', 100, 100);
+      state.vx = 50;
+      state.vy = 50;
+      state.pinned = true;
 
-      applyVelocities([state], config);
+      applyVelocities([state]);
 
-      expect(state.x).toBeLessThanOrEqual(750);
-      expect(state.y).toBeLessThanOrEqual(550);
+      expect(state.x).toBe(100);
+      expect(state.y).toBe(100);
     });
   });
 });

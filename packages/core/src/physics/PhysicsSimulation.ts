@@ -55,7 +55,7 @@ export class PhysicsSimulation<N = Record<string, unknown>, E = Record<string, u
       applyForce(state, force, this.config);
     }
 
-    applyVelocities(states, this.config);
+    applyVelocities(states);
     return this.getPositions();
   }
 
