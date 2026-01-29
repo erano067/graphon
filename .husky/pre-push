@@ -2,8 +2,9 @@
 git fetch --tags
 pnpm tsx scripts/release.ts --bump
 
-# If package.json files were modified, amend the commit
+# If package.json files were modified by bump, create a new commit
 if ! git diff --quiet packages/*/package.json 2>/dev/null; then
   git add packages/*/package.json
-  git commit --amend --no-edit --no-verify
+  VERSION=$(node -p "require('./packages/core/package.json').version")
+  git commit -m "chore(release): bump version to ${VERSION}" --no-verify
 fi

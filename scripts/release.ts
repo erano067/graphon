@@ -91,10 +91,16 @@ function bump(): void {
   const latestTag = getLatestReleaseTag();
   const corePkg = readPackageJson('packages/core');
   const currentVersion = corePkg.version;
-  const tagVersion = latestTag !== null ? getVersionFromTag(latestTag) : null;
 
-  if (tagVersion !== null && currentVersion !== tagVersion) {
-    log('📦 Version already bumped, skipping.');
+  if (latestTag === null) {
+    log('📦 No release tags found, skipping bump.');
+    return;
+  }
+
+  const tagVersion = getVersionFromTag(latestTag);
+
+  if (currentVersion !== tagVersion) {
+    log(`📦 Version ${currentVersion} differs from tag ${tagVersion}, already bumped.`);
     return;
   }
 
