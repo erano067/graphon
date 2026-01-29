@@ -52,9 +52,16 @@ function getCommitsSinceLastRelease(): string {
   }
 }
 
+function isHeadReleaseCommit(): boolean {
+  const headMessage = execSync('git log -1 --format=%s', { encoding: 'utf-8' }).trim();
+  return headMessage.startsWith('chore: release v');
+}
+
 function hasReleasableCommits(): boolean {
+  if (isHeadReleaseCommit()) return false;
+
   const gitLog = getCommitsSinceLastRelease();
-  if (!gitLog.trim()) return false;
+  if (gitLog.trim() === '') return false;
 
   const lines = gitLog.trim().split('\n');
   const nonReleaseCommits = lines.filter((line) => !line.includes('chore: release v'));
