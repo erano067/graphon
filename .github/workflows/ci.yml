@@ -163,5 +163,8 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
+      - name: Update npm for trusted publishing
+        run: npm install -g npm@latest
+
       - name: Publish and tag
         run: pnpm tsx scripts/release.ts --publish

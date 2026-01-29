@@ -140,10 +140,11 @@ function publish(): void {
     log(`📦 v${version} already published on npm.`);
   } else {
     log(`📦 Publishing v${version} to npm...`);
-    execSync(
-      'pnpm --filter "@graphon/core" --filter "@graphon/react" publish --access public --no-git-checks --provenance',
-      { stdio: 'inherit' }
-    );
+    for (const dir of PACKAGES) {
+      const pkgPath = join(ROOT, dir);
+      log(`   Publishing ${dir}...`);
+      execSync('npm publish --access public', { stdio: 'inherit', cwd: pkgPath });
+    }
     log(`✅ Published v${version} to npm.`);
   }
 
