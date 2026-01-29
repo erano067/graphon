@@ -20,33 +20,28 @@ function writePackageJson(dir: string, pkg: PackageJson): void {
   writeFileSync(path, `${JSON.stringify(pkg, null, 2)}\n`);
 }
 
-function getPublishedVersion(packageName: string): string | null {
+function getLatestReleaseTag(): string | null {
   try {
-    return execSync(`npm view ${packageName} version 2>/dev/null`, {
+    const tags = execSync('git tag -l "@graphon/core@*" --sort=-v:refname', {
       encoding: 'utf-8',
     }).trim();
+    const firstTag = tags.split('\n')[0];
+    return firstTag === '' ? null : firstTag;
   } catch {
     return null;
   }
 }
 
-function getCommitsSinceLastRelease(): string {
+function getVersionFromTag(tag: string): string {
+  return tag.replace('@graphon/core@', '');
+}
+
+function getCommitsSinceTag(tag: string | null): string {
   try {
-    const corePkg = readPackageJson('packages/core');
-    const publishedVersion = getPublishedVersion(corePkg.name);
-
-    if (publishedVersion === null || publishedVersion === '') {
+    if (tag === null) {
       return execSync('git log --oneline', { encoding: 'utf-8' });
     }
-
-    const releaseTag = `${corePkg.name}@${publishedVersion}`;
-    const tagExists = execSync(`git tag -l "${releaseTag}"`, { encoding: 'utf-8' }).trim();
-
-    if (tagExists === '') {
-      return execSync('git log --oneline', { encoding: 'utf-8' });
-    }
-
-    return execSync(`git log ${releaseTag}..HEAD --oneline`, { encoding: 'utf-8' });
+    return execSync(`git log ${tag}..HEAD --oneline`, { encoding: 'utf-8' });
   } catch {
     return '';
   }
@@ -57,10 +52,10 @@ function isHeadReleaseCommit(): boolean {
   return headMessage.startsWith('chore: release v');
 }
 
-function hasReleasableCommits(): boolean {
+function hasReleasableCommits(latestTag: string | null): boolean {
   if (isHeadReleaseCommit()) return false;
 
-  const gitLog = getCommitsSinceLastRelease();
+  const gitLog = getCommitsSinceTag(latestTag);
   if (gitLog.trim() === '') return false;
 
   const lines = gitLog.trim().split('\n');
@@ -68,8 +63,8 @@ function hasReleasableCommits(): boolean {
   return nonReleaseCommits.length > 0;
 }
 
-function getConventionalBump(): 'major' | 'minor' | 'patch' {
-  const gitLog = getCommitsSinceLastRelease();
+function getConventionalBump(latestTag: string | null): 'major' | 'minor' | 'patch' {
+  const gitLog = getCommitsSinceTag(latestTag);
 
   if (gitLog.includes('BREAKING CHANGE') || gitLog.includes('!:')) return 'major';
   if (/feat[:(]/.test(gitLog)) return 'minor';
@@ -102,9 +97,11 @@ function run(): void {
   execSync('git fetch --tags', { stdio: 'inherit' });
 
   const arg = process.argv[2];
+  const latestTag = getLatestReleaseTag();
+  const currentVersion = latestTag !== null ? getVersionFromTag(latestTag) : '0.0.0';
 
   if (arg === '--check-only') {
-    if (!hasReleasableCommits()) {
+    if (!hasReleasableCommits(latestTag)) {
       log('📦 No releasable commits found, skipping release.');
       process.exit(1);
     }
@@ -112,19 +109,16 @@ function run(): void {
     process.exit(0);
   }
 
-  if (!hasReleasableCommits()) {
+  if (!hasReleasableCommits(latestTag)) {
     log('📦 No releasable commits found, skipping release.');
     return;
   }
 
-  const bump: BumpType = isValidBumpType(arg) ? arg : getConventionalBump();
+  const bump: BumpType = isValidBumpType(arg) ? arg : getConventionalBump(latestTag);
+  const newVersion = bumpVersion(currentVersion, bump);
 
   log(`📦 Detected bump type: ${bump}`);
-
-  const corePkg = readPackageJson('packages/core');
-  const newVersion = bumpVersion(corePkg.version, bump);
-
-  log(`📦 Bumping version: ${corePkg.version} → ${newVersion}`);
+  log(`📦 Bumping version: ${currentVersion} → ${newVersion}`);
 
   for (const dir of PACKAGES) {
     const pkg = readPackageJson(dir);
@@ -136,11 +130,8 @@ function run(): void {
   execSync('git add packages/*/package.json', { stdio: 'inherit' });
   execSync(`git commit -m "chore: release v${newVersion}" --no-verify`, { stdio: 'inherit' });
 
-  log('\n📤 Pushing to remote...');
-  execSync('git push', { stdio: 'inherit' });
-
-  log(`\n✅ Release v${newVersion} committed and pushed.`);
-  log('   Tags will be created after successful npm publish.');
+  log(`\n✅ Release v${newVersion} committed locally.`);
+  log('   CI will push after successful npm publish.');
 }
 
 run();
