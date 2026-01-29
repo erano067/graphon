@@ -1,6 +1,6 @@
 {
   "name": "@graphon/react",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "React bindings for Graphon graph visualization library",
   "license": "MIT",
   "repository": {
