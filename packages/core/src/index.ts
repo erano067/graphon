@@ -120,11 +120,25 @@ export {
 // ============================================================================
 // Layout
 // ============================================================================
-export type { Layout, LayoutType, LayoutOptions, ForceLayoutOptions } from './layout';
+export type {
+  Layout,
+  LayoutType,
+  LayoutOptions,
+  ForceLayoutOptions,
+  ConcentricLayoutOptions as CoreConcentricLayoutOptions,
+  RadialLayoutOptions as CoreRadialLayoutOptions,
+  CreateLayoutOptions,
+  LayoutWorkerRequest,
+  LayoutWorkerResult,
+  LayoutWorkerType,
+} from './layout';
 export {
   ForceLayout,
   CircularLayout,
   GridLayout,
+  ConcentricLayout,
+  RadialLayout,
+  LayoutWorkerCore,
   createLayout,
   DEFAULT_LAYOUT_OPTIONS,
   DEFAULT_FORCE_OPTIONS,

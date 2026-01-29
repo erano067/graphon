@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { useMemo, useState } from 'react';
-import type { Edge, Node } from '@graphon/core';
 import { Graphon } from '@graphon/react';
+import { generateLargeGraph as generateGraph } from '../../helpers/graphData';
 
 const meta: Meta<typeof Graphon> = {
   title: 'Performance/Large Graphs',
@@ -14,50 +14,6 @@ const meta: Meta<typeof Graphon> = {
 export default meta;
 type Story = StoryObj<typeof Graphon>;
 
-interface NodeData {
-  label: string;
-  group: number;
-}
-
-function generateLargeGraph(
-  nodeCount: number,
-  edgeDensity: number
-): { nodes: Node<NodeData>[]; edges: Edge<Record<string, never>>[] } {
-  const nodes: Node<NodeData>[] = [];
-  const edges: Edge<Record<string, never>>[] = [];
-  const groupCount = Math.ceil(nodeCount / 50);
-
-  for (let i = 0; i < nodeCount; i++) {
-    nodes.push({
-      id: `n${i}`,
-      data: { label: `Node ${i}`, group: i % groupCount },
-    });
-  }
-
-  const targetEdgeCount = Math.floor(nodeCount * edgeDensity);
-  const addedEdges = new Set<string>();
-
-  while (edges.length < targetEdgeCount) {
-    const source = Math.floor(Math.random() * nodeCount);
-    const target = Math.floor(Math.random() * nodeCount);
-
-    if (source !== target) {
-      const edgeKey = source < target ? `${source}-${target}` : `${target}-${source}`;
-      if (!addedEdges.has(edgeKey)) {
-        addedEdges.add(edgeKey);
-        edges.push({
-          id: `e${edges.length}`,
-          source: `n${source}`,
-          target: `n${target}`,
-          data: {},
-        });
-      }
-    }
-  }
-
-  return { nodes, edges };
-}
-
 const colors = [0xe74c3c, 0x3498db, 0x2ecc71, 0xf39c12, 0x9b59b6, 0x1abc9c, 0xe67e22, 0x34495e];
 
 function getNodeColor(nodeId: string, nodeCount: number): number {
@@ -66,7 +22,7 @@ function getNodeColor(nodeId: string, nodeCount: number): number {
   return colors[groupNum % colors.length] ?? 0x3498db;
 }
 
-const graph1000 = generateLargeGraph(1000, 1.2);
+const graph1000 = generateGraph(1000, 1.2);
 
 export const Nodes1000: Story = {
   args: {
@@ -84,7 +40,7 @@ export const Nodes1000: Story = {
   },
 };
 
-const graph2000 = generateLargeGraph(2000, 1);
+const graph2000 = generateGraph(2000, 1);
 
 export const Nodes2000: Story = {
   args: {
@@ -102,10 +58,35 @@ export const Nodes2000: Story = {
   },
 };
 
+export const Nodes50000: Story = {
+  render: function Nodes50000Story(args) {
+    const graph = useMemo(() => generateGraph(50000, 1.5), []);
+    return (
+      <Graphon
+        {...args}
+        nodes={graph.nodes}
+        edges={graph.edges}
+        width={1400}
+        height={900}
+        isAnimated={false}
+        nodeStyleFn={() => ({ shape: 'circle', radius: 1, color: 0x3498db })}
+        edgeStyleFn={() => ({ color: 0x222222, width: 0.05 })}
+      />
+    );
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: '50,000 nodes with 75,000 edges. Physics disabled for performance.',
+      },
+    },
+  },
+};
+
 export const DynamicNodeCount: Story = {
-  render: function DynamicNodeCountStory() {
+  render: function DynamicNodeCountStory(args) {
     const [nodeCount, setNodeCount] = useState(200);
-    const graph = useMemo(() => generateLargeGraph(nodeCount, 1.5), [nodeCount]);
+    const graph = useMemo(() => generateGraph(nodeCount, 1.5), [nodeCount]);
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
@@ -116,7 +97,7 @@ export const DynamicNodeCount: Story = {
           <input
             type="range"
             min="50"
-            max="2000"
+            max="10000"
             step="50"
             value={nodeCount}
             onChange={(e) => setNodeCount(Number(e.target.value))}
@@ -125,19 +106,20 @@ export const DynamicNodeCount: Story = {
         </div>
         <div style={{ flex: 1 }}>
           <Graphon
+            {...args}
             nodes={graph.nodes}
             edges={graph.edges}
             width={1000}
             height={600}
-            isAnimated={true}
+            isAnimated={nodeCount <= 1000}
             nodeStyleFn={(node) => ({
               shape: 'circle',
-              radius: Math.max(3, 15 - nodeCount / 150),
+              radius: Math.max(1, 15 - nodeCount / 150),
               color: getNodeColor(node.id, nodeCount),
             })}
             edgeStyleFn={() => ({
               color: 0x444444,
-              width: Math.max(0.1, 0.5 - nodeCount / 3000),
+              width: Math.max(0.05, 0.5 - nodeCount / 3000),
             })}
           />
         </div>

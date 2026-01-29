@@ -1,6 +1,6 @@
 import type { Edge, Node, PositionMap } from '../model/types';
 
-export type LayoutType = 'force' | 'circular' | 'grid';
+export type LayoutType = 'force' | 'circular' | 'grid' | 'concentric' | 'radial';
 
 export interface LayoutOptions {
   width: number;

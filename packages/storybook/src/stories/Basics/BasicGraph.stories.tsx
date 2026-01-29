@@ -1,6 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react';
+import { useMemo } from 'react';
 import { Graphon } from '@graphon/react';
-import { COLORS, generateNetworkGraph, generateSimpleGraph } from '../../helpers/graphData';
+import {
+  COLORS,
+  generateLargeGraph,
+  generateNetworkGraph,
+  generateSimpleGraph,
+} from '../../helpers/graphData';
 
 const meta: Meta<typeof Graphon> = {
   title: 'Basics/Basic Graph',
@@ -42,7 +48,7 @@ export const Simple: Story = {
   },
 };
 
-const mediumData = generateNetworkGraph(20, 0.15);
+const mediumData = generateNetworkGraph(100, 0.05);
 
 export const MediumNetwork: Story = {
   args: {
@@ -55,26 +61,34 @@ export const MediumNetwork: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'A medium-sized network with ~20 nodes showing force-directed layout.',
+        story: 'A medium-sized network with ~100 nodes showing force-directed layout.',
       },
     },
   },
 };
 
-const largeData = generateNetworkGraph(100, 0.05);
-
 export const LargeNetwork: Story = {
+  render: function LargeNetworkStory(args) {
+    const graph = useMemo(() => generateLargeGraph(50000, 1.5), []);
+    return (
+      <Graphon
+        {...args}
+        nodes={graph.nodes}
+        edges={graph.edges}
+        nodeStyleFn={() => ({ shape: 'circle', radius: 1, color: 0x3498db })}
+        edgeStyleFn={() => ({ color: 0x333333, width: 0.1 })}
+      />
+    );
+  },
   args: {
-    nodes: largeData.nodes,
-    edges: largeData.edges,
-    width: 1000,
-    height: 700,
-    isAnimated: true,
+    width: 1200,
+    height: 800,
+    isAnimated: false,
   },
   parameters: {
     docs: {
       description: {
-        story: 'A larger network with ~100 nodes demonstrating performance.',
+        story: 'A large network with 50,000 nodes. Physics disabled for performance.',
       },
     },
   },

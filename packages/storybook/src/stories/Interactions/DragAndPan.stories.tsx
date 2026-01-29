@@ -18,7 +18,7 @@ type Story = StoryObj<typeof Graphon>;
 const { nodes, edges } = generateSimpleGraph();
 
 export const DragEvents: Story = {
-  render: function DragEventsStory() {
+  render: function DragEventsStory(args) {
     const [dragState, setDragState] = useState<{
       nodeId: string | null;
       position: { x: number; y: number } | null;
@@ -47,6 +47,7 @@ export const DragEvents: Story = {
         </div>
         <div style={{ flex: 1 }}>
           <Graphon
+            {...args}
             nodes={nodes}
             edges={edges}
             width={800}
@@ -68,7 +69,7 @@ export const DragEvents: Story = {
 };
 
 export const PanAndZoom: Story = {
-  render: function PanAndZoomStory() {
+  render: function PanAndZoomStory(args) {
     const [zoom, setZoom] = useState(1);
 
     return (
@@ -88,6 +89,7 @@ export const PanAndZoom: Story = {
         </div>
         <div style={{ flex: 1 }}>
           <Graphon
+            {...args}
             nodes={nodes}
             edges={edges}
             width={800}

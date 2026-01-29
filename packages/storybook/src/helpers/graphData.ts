@@ -72,6 +72,52 @@ export function generateNetworkGraph(
   return { nodes, edges };
 }
 
+export function generateLargeGraph(
+  nodeCount: number,
+  edgesPerNode = 2
+): {
+  nodes: Node<NodeData>[];
+  edges: Edge<EdgeData>[];
+} {
+  const categories = ['primary', 'secondary', 'tertiary', 'quaternary'];
+  const nodes: Node<NodeData>[] = new Array(nodeCount);
+  const targetEdgeCount = Math.floor(nodeCount * edgesPerNode);
+  const edges: Edge<EdgeData>[] = new Array(targetEdgeCount);
+  const addedEdges = new Set<string>();
+
+  for (let i = 0; i < nodeCount; i++) {
+    nodes[i] = {
+      id: `n${i}`,
+      data: {
+        label: `Node ${i}`,
+        category: categories[i % categories.length] ?? 'primary',
+        value: Math.random() * 100,
+      },
+    };
+  }
+
+  let edgeIndex = 0;
+  while (edgeIndex < targetEdgeCount) {
+    const source = Math.floor(Math.random() * nodeCount);
+    const target = Math.floor(Math.random() * nodeCount);
+    if (source === target) continue;
+
+    const edgeKey = source < target ? `${source}-${target}` : `${target}-${source}`;
+    if (addedEdges.has(edgeKey)) continue;
+
+    addedEdges.add(edgeKey);
+    edges[edgeIndex] = {
+      id: `e${edgeIndex}`,
+      source: `n${source}`,
+      target: `n${target}`,
+      data: { weight: Math.random() * 5 },
+    };
+    edgeIndex++;
+  }
+
+  return { nodes, edges };
+}
+
 export const COLORS = {
   primary: 0x3498db,
   secondary: 0xe74c3c,

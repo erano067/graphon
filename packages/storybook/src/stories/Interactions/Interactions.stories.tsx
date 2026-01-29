@@ -18,7 +18,7 @@ type Story = StoryObj<typeof Graphon>;
 const { nodes, edges } = generateSimpleGraph();
 
 export const ClickEvents: Story = {
-  render: function ClickEventsStory() {
+  render: function ClickEventsStory(args) {
     const [clickedNode, setClickedNode] = useState<string | null>(null);
 
     return (
@@ -38,6 +38,7 @@ export const ClickEvents: Story = {
         </div>
         <div style={{ flex: 1 }}>
           <Graphon
+            {...args}
             nodes={nodes}
             edges={edges}
             width={800}
@@ -58,7 +59,7 @@ export const ClickEvents: Story = {
 };
 
 export const HoverEvents: Story = {
-  render: function HoverEventsStory() {
+  render: function HoverEventsStory(args) {
     const [hoveredNode, setHoveredNode] = useState<string | null>(null);
 
     return (
@@ -78,6 +79,7 @@ export const HoverEvents: Story = {
         </div>
         <div style={{ flex: 1 }}>
           <Graphon
+            {...args}
             nodes={nodes}
             edges={edges}
             width={800}
