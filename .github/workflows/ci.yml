@@ -158,33 +158,10 @@ jobs:
           name: build-output
           path: packages
 
-      - name: Check for releasable commits
-        id: check
-        run: |
-          if pnpm tsx scripts/release.ts --check-only; then
-            echo "should_release=true" >> $GITHUB_OUTPUT
-          else
-            echo "should_release=false" >> $GITHUB_OUTPUT
-          fi
-
       - name: Configure git
-        if: steps.check.outputs.should_release == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Create release
-        if: steps.check.outputs.should_release == 'true'
-        run: pnpm tsx scripts/release.ts
-
-      - name: Publish packages
-        if: steps.check.outputs.should_release == 'true'
-        run: pnpm --filter '@graphon/core' --filter '@graphon/react' publish --access public --no-git-checks --provenance
-
-      - name: Push release commit and tags
-        if: steps.check.outputs.should_release == 'true'
-        run: |
-          VERSION=$(node -p "require('./packages/core/package.json').version")
-          git tag -a "@graphon/core@${VERSION}" -m "Release @graphon/core@${VERSION}"
-          git tag -a "@graphon/react@${VERSION}" -m "Release @graphon/react@${VERSION}"
-          git push --follow-tags
+      - name: Publish and tag
+        run: pnpm tsx scripts/release.ts --publish

@@ -20,6 +20,10 @@ function writePackageJson(dir: string, pkg: PackageJson): void {
   writeFileSync(path, `${JSON.stringify(pkg, null, 2)}\n`);
 }
 
+function log(message: string): void {
+  process.stdout.write(`${message}\n`);
+}
+
 function getLatestReleaseTag(): string | null {
   try {
     const tags = execSync('git tag -l "@graphon/core@*" --sort=-v:refname', {
@@ -30,6 +34,10 @@ function getLatestReleaseTag(): string | null {
   } catch {
     return null;
   }
+}
+
+function getVersionFromTag(tag: string): string {
+  return tag.replace('@graphon/core@', '');
 }
 
 function getCommitsSinceTag(tag: string | null): string {
@@ -43,25 +51,8 @@ function getCommitsSinceTag(tag: string | null): string {
   }
 }
 
-function isHeadReleaseCommit(): boolean {
-  const headMessage = execSync('git log -1 --format=%s', { encoding: 'utf-8' }).trim();
-  return headMessage.startsWith('chore: release v');
-}
-
-function hasReleasableCommits(latestTag: string | null): boolean {
-  if (isHeadReleaseCommit()) return false;
-
-  const gitLog = getCommitsSinceTag(latestTag);
-  if (gitLog.trim() === '') return false;
-
-  const lines = gitLog.trim().split('\n');
-  const nonReleaseCommits = lines.filter((line) => !line.includes('chore: release v'));
-  return nonReleaseCommits.length > 0;
-}
-
 function getConventionalBump(latestTag: string | null): 'major' | 'minor' | 'patch' {
   const gitLog = getCommitsSinceTag(latestTag);
-
   if (gitLog.includes('BREAKING CHANGE') || gitLog.includes('!:')) return 'major';
   if (/feat[:(]/.test(gitLog)) return 'minor';
   return 'patch';
@@ -79,43 +70,50 @@ function bumpVersion(version: string, type: 'major' | 'minor' | 'patch'): string
   }
 }
 
-type BumpType = 'major' | 'minor' | 'patch';
-
-function isValidBumpType(value: string | undefined): value is BumpType {
-  return value === 'major' || value === 'minor' || value === 'patch';
+function getPublishedVersion(packageName: string): string | null {
+  try {
+    return execSync(`npm view ${packageName} version 2>/dev/null`, {
+      encoding: 'utf-8',
+    }).trim();
+  } catch {
+    return null;
+  }
 }
 
-function log(message: string): void {
-  process.stdout.write(`${message}\n`);
+function tagExists(tag: string): boolean {
+  const result = execSync(`git tag -l "${tag}"`, { encoding: 'utf-8' }).trim();
+  return result !== '';
 }
 
-function run(): void {
+function bump(): void {
   execSync('git fetch --tags', { stdio: 'inherit' });
 
-  const arg = process.argv[2];
   const latestTag = getLatestReleaseTag();
   const corePkg = readPackageJson('packages/core');
   const currentVersion = corePkg.version;
+  const tagVersion = latestTag !== null ? getVersionFromTag(latestTag) : null;
 
-  if (arg === '--check-only') {
-    if (!hasReleasableCommits(latestTag)) {
-      log('📦 No releasable commits found, skipping release.');
-      process.exit(1);
-    }
-    log('📦 Releasable commits found.');
-    process.exit(0);
-  }
-
-  if (!hasReleasableCommits(latestTag)) {
-    log('📦 No releasable commits found, skipping release.');
+  if (tagVersion !== null && currentVersion !== tagVersion) {
+    log('📦 Version already bumped, skipping.');
     return;
   }
 
-  const bump: BumpType = isValidBumpType(arg) ? arg : getConventionalBump(latestTag);
-  const newVersion = bumpVersion(currentVersion, bump);
+  const commits = getCommitsSinceTag(latestTag).trim();
+  if (commits === '') {
+    log('📦 No commits since last release, skipping.');
+    return;
+  }
 
-  log(`📦 Detected bump type: ${bump}`);
-  log(`📦 Bumping version: ${currentVersion} → ${newVersion}`);
+  const nonReleaseCommits = commits.split('\n').filter((l) => !l.includes('chore: release v'));
+  if (nonReleaseCommits.length === 0) {
+    log('📦 No releasable commits, skipping.');
+    return;
+  }
+
+  const bumpType = getConventionalBump(latestTag);
+  const newVersion = bumpVersion(currentVersion, bumpType);
+
+  log(`📦 Bumping version: ${currentVersion} → ${newVersion} (${bumpType})`);
 
   for (const dir of PACKAGES) {
     const pkg = readPackageJson(dir);
@@ -124,11 +122,48 @@ function run(): void {
     log(`   ✓ ${pkg.name}@${newVersion}`);
   }
 
-  execSync('git add packages/*/package.json', { stdio: 'inherit' });
-  execSync(`git commit -m "chore: release v${newVersion}" --no-verify`, { stdio: 'inherit' });
-
-  log(`\n✅ Release v${newVersion} committed locally.`);
-  log('   CI will push after successful npm publish.');
+  log('\n✅ Version bumped. Commit and push to trigger CI publish.');
 }
 
-run();
+function publish(): void {
+  const corePkg = readPackageJson('packages/core');
+  const { version } = corePkg;
+  const publishedVersion = getPublishedVersion(corePkg.name);
+
+  if (publishedVersion === version) {
+    log(`📦 v${version} already published on npm.`);
+  } else {
+    log(`📦 Publishing v${version} to npm...`);
+    execSync(
+      'pnpm --filter "@graphon/core" --filter "@graphon/react" publish --access public --no-git-checks --provenance',
+      { stdio: 'inherit' }
+    );
+    log(`✅ Published v${version} to npm.`);
+  }
+
+  const coreTag = `@graphon/core@${version}`;
+  const reactTag = `@graphon/react@${version}`;
+
+  if (tagExists(coreTag)) {
+    log(`🏷️  Tags already exist, skipping.`);
+  } else {
+    log(`🏷️  Creating tags...`);
+    execSync(`git tag -a "${coreTag}" -m "Release ${coreTag}"`, { stdio: 'inherit' });
+    execSync(`git tag -a "${reactTag}" -m "Release ${reactTag}"`, { stdio: 'inherit' });
+    execSync('git push --tags', { stdio: 'inherit' });
+    log(`✅ Tags pushed.`);
+  }
+}
+
+const arg = process.argv[2];
+
+if (arg === '--bump') {
+  bump();
+} else if (arg === '--publish') {
+  publish();
+} else {
+  log('Usage: release.ts --bump | --publish');
+  log('  --bump    Calculate and bump version locally (pre-commit)');
+  log('  --publish Publish to npm and tag (CI only)');
+  process.exit(1);
+}

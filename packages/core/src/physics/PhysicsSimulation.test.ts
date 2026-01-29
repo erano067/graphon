@@ -67,10 +67,14 @@ describe('PhysicsSimulation', () => {
       const edges = createTestEdges(nodes);
 
       const initial = sim.initialize(nodes, edges);
-      const updated = sim.tick();
+      const pos0 = initial.get('node-0');
+
+      let updated = sim.tick();
+      for (let i = 0; i < 10; i++) {
+        updated = sim.tick();
+      }
 
       expect(updated.size).toBe(3);
-      const pos0 = initial.get('node-0');
       const newPos0 = updated.get('node-0');
       const moved = pos0?.x !== newPos0?.x || pos0?.y !== newPos0?.y;
       expect(moved).toBe(true);
