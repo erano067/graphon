@@ -20,21 +20,40 @@ function writePackageJson(dir: string, pkg: PackageJson): void {
   writeFileSync(path, `${JSON.stringify(pkg, null, 2)}\n`);
 }
 
-function getCommitsSinceLastTag(): string {
+function getPublishedVersion(packageName: string): string | null {
   try {
-    const lastTag = execSync('git describe --tags --abbrev=0 2>/dev/null || echo ""', {
+    return execSync(`npm view ${packageName} version 2>/dev/null`, {
       encoding: 'utf-8',
     }).trim();
+  } catch {
+    return null;
+  }
+}
 
-    const range = lastTag ? `${lastTag}..HEAD` : 'HEAD';
-    return execSync(`git log ${range} --oneline`, { encoding: 'utf-8' });
+function getCommitsSinceLastRelease(): string {
+  try {
+    const corePkg = readPackageJson('packages/core');
+    const publishedVersion = getPublishedVersion(corePkg.name);
+
+    if (publishedVersion === null || publishedVersion === '') {
+      return execSync('git log --oneline', { encoding: 'utf-8' });
+    }
+
+    const releaseTag = `${corePkg.name}@${publishedVersion}`;
+    const tagExists = execSync(`git tag -l "${releaseTag}"`, { encoding: 'utf-8' }).trim();
+
+    if (tagExists === '') {
+      return execSync('git log --oneline', { encoding: 'utf-8' });
+    }
+
+    return execSync(`git log ${releaseTag}..HEAD --oneline`, { encoding: 'utf-8' });
   } catch {
     return '';
   }
 }
 
 function hasReleasableCommits(): boolean {
-  const gitLog = getCommitsSinceLastTag();
+  const gitLog = getCommitsSinceLastRelease();
   if (!gitLog.trim()) return false;
 
   const lines = gitLog.trim().split('\n');
@@ -43,7 +62,7 @@ function hasReleasableCommits(): boolean {
 }
 
 function getConventionalBump(): 'major' | 'minor' | 'patch' {
-  const gitLog = getCommitsSinceLastTag();
+  const gitLog = getCommitsSinceLastRelease();
 
   if (gitLog.includes('BREAKING CHANGE') || gitLog.includes('!:')) return 'major';
   if (/feat[:(]/.test(gitLog)) return 'minor';
@@ -73,6 +92,8 @@ function log(message: string): void {
 }
 
 function run(): void {
+  execSync('git fetch --tags', { stdio: 'inherit' });
+
   const arg = process.argv[2];
 
   if (arg === '--check-only') {
@@ -108,17 +129,11 @@ function run(): void {
   execSync('git add packages/*/package.json', { stdio: 'inherit' });
   execSync(`git commit -m "chore: release v${newVersion}" --no-verify`, { stdio: 'inherit' });
 
-  for (const dir of PACKAGES) {
-    const pkg = readPackageJson(dir);
-    const tag = `${pkg.name}@${newVersion}`;
-    execSync(`git tag -a ${tag} -m "Release ${tag}"`, { stdio: 'inherit' });
-    log(`   🏷️  ${tag}`);
-  }
-
   log('\n📤 Pushing to remote...');
-  execSync('git push --follow-tags', { stdio: 'inherit' });
+  execSync('git push', { stdio: 'inherit' });
 
-  log(`\n✅ Release v${newVersion} created and pushed.`);
+  log(`\n✅ Release v${newVersion} committed and pushed.`);
+  log('   Tags will be created after successful npm publish.');
 }
 
 run();
