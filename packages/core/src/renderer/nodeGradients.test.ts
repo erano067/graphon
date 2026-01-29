@@ -126,6 +126,41 @@ describe('nodeGradients', () => {
       const result = computeLinearGradientOffset(point, center, 10, 'to-bottom-right');
       expect(result).toBeCloseTo(0.5);
     });
+
+    it('handles to-top direction', () => {
+      const center = { x: 50, y: 50 };
+      const topPoint = { x: 50, y: 40 };
+      const result = computeLinearGradientOffset(topPoint, center, 10, 'to-top');
+      expect(result).toBe(1);
+    });
+
+    it('handles to-left direction', () => {
+      const center = { x: 50, y: 50 };
+      const leftPoint = { x: 40, y: 50 };
+      const result = computeLinearGradientOffset(leftPoint, center, 10, 'to-left');
+      expect(result).toBe(1);
+    });
+
+    it('handles to-bottom-left direction', () => {
+      const center = { x: 50, y: 50 };
+      const point = { x: 50, y: 50 };
+      const result = computeLinearGradientOffset(point, center, 10, 'to-bottom-left');
+      expect(result).toBeCloseTo(0.5);
+    });
+
+    it('handles to-top-right direction', () => {
+      const center = { x: 50, y: 50 };
+      const point = { x: 50, y: 50 };
+      const result = computeLinearGradientOffset(point, center, 10, 'to-top-right');
+      expect(result).toBeCloseTo(0.5);
+    });
+
+    it('handles to-top-left direction', () => {
+      const center = { x: 50, y: 50 };
+      const point = { x: 50, y: 50 };
+      const result = computeLinearGradientOffset(point, center, 10, 'to-top-left');
+      expect(result).toBeCloseTo(0.5);
+    });
   });
 
   describe('computeRadialGradientOffset', () => {

@@ -27,5 +27,5 @@ export const COMMUNITY_COLORS_CSS = [
 ];
 
 export function getCommunityColor(community: number): string {
-  return COMMUNITY_COLORS_CSS[community % COMMUNITY_COLORS_CSS.length];
+  return COMMUNITY_COLORS_CSS[community % COMMUNITY_COLORS_CSS.length] ?? '#ffffff';
 }

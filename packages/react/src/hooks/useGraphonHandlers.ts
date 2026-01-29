@@ -35,11 +35,14 @@ interface GraphonHandlers {
   handleWheel: (event: WheelEvent) => void;
 }
 
-function cleanupOnLeave<N, E>(
-  refs: GraphonRefs<N, E>,
-  callbacks: HandlerCallbacks<N, E>,
-  physics: PhysicsEngine<N, E> | undefined
-): void {
+function getRendererAndPhysics<N, E>(
+  refs: GraphonRefs<N, E>
+): { renderer: PixiRenderer<N, E> | undefined; physics: PhysicsEngine<N, E> | undefined } {
+  return { renderer: refs.renderer.current, physics: refs.physics.current };
+}
+
+function cleanupOnLeave<N, E>(refs: GraphonRefs<N, E>, callbacks: HandlerCallbacks<N, E>): void {
+  const physics = refs.physics.current;
   if (refs.dragState.current && refs.isDragging.current && physics) {
     void physics.unpinNode(refs.dragState.current.nodeId);
     refs.dragState.current = undefined;
@@ -56,56 +59,57 @@ function cleanupOnLeave<N, E>(
   }
 }
 
-function getRendererAndPhysics<N, E>(
-  refs: GraphonRefs<N, E>
-): { renderer: PixiRenderer<N, E> | undefined; physics: PhysicsEngine<N, E> | undefined } {
-  return { renderer: refs.renderer.current, physics: refs.physics.current };
-}
+type MouseHandlerResult = Pick<
+  GraphonHandlers,
+  'handleMouseDown' | 'handleMouseMove' | 'handleMouseUp' | 'handleMouseLeave'
+>;
 
-function createMouseDownHandler<N, E>(
+function useMouseHandlers<N, E>(
   refs: GraphonRefs<N, E>,
+  callbacks: HandlerCallbacks<N, E>,
   isDraggable: boolean,
   isPannable: boolean
-): (event: React.MouseEvent<HTMLDivElement>) => void {
-  return (event) => {
-    const { renderer, physics } = getRendererAndPhysics(refs);
-    if (!renderer || !physics) return;
-    const pos = getMousePos(event);
-    if (isDraggable && handleDragStart(pos, renderer, physics, refs)) {
-      event.preventDefault();
-      return;
-    }
-    if (isPannable && handlePanStart(pos, renderer, refs)) event.preventDefault();
-  };
-}
-
-function createMouseMoveHandler<N, E>(
-  refs: GraphonRefs<N, E>,
-  callbacks: HandlerCallbacks<N, E>
-): (event: React.MouseEvent<HTMLDivElement>) => void {
-  return (event) => {
-    const { renderer, physics } = getRendererAndPhysics(refs);
-    if (!renderer || !physics) return;
-    const pos = getMousePos(event);
-    if (refs.dragState.current && refs.isDragging.current) {
-      handleDragMove({ pos, renderer, physics, refs, callbacks });
-    } else if (refs.isPanning.current && refs.panState.current) {
-      handlePanMove(pos, renderer, refs);
-    } else handleHover(pos, renderer, refs, callbacks);
-  };
-}
-
-function createMouseUpHandler<N, E>(
-  refs: GraphonRefs<N, E>,
-  callbacks: HandlerCallbacks<N, E>
-): (event: React.MouseEvent<HTMLDivElement>) => void {
-  return (event) => {
-    const { renderer, physics } = getRendererAndPhysics(refs);
-    if (!renderer || !physics) return;
-    if (refs.dragState.current && refs.isDragging.current) handleDragEnd(physics, refs, callbacks);
-    else if (refs.isPanning.current) handlePanEnd(refs);
-    else handleClick(getMousePos(event), renderer, callbacks);
-  };
+): MouseHandlerResult {
+  const handleMouseDown = useCallback(
+    (event: React.MouseEvent<HTMLDivElement>) => {
+      const { renderer, physics } = getRendererAndPhysics(refs);
+      if (!renderer || !physics) return;
+      const pos = getMousePos(event);
+      if (isDraggable && handleDragStart(pos, renderer, physics, refs)) {
+        event.preventDefault();
+        return;
+      }
+      if (isPannable && handlePanStart(pos, renderer, refs)) event.preventDefault();
+    },
+    [refs, isDraggable, isPannable]
+  );
+  const handleMouseMove = useCallback(
+    (event: React.MouseEvent<HTMLDivElement>) => {
+      const { renderer, physics } = getRendererAndPhysics(refs);
+      if (!renderer || !physics) return;
+      const pos = getMousePos(event);
+      if (refs.dragState.current && refs.isDragging.current) {
+        handleDragMove({ pos, renderer, physics, refs, callbacks });
+      } else if (refs.isPanning.current && refs.panState.current) {
+        handlePanMove(pos, renderer, refs);
+      } else handleHover(pos, renderer, refs, callbacks);
+    },
+    [refs, callbacks]
+  );
+  const handleMouseUp = useCallback(
+    (event: React.MouseEvent<HTMLDivElement>) => {
+      const { renderer, physics } = getRendererAndPhysics(refs);
+      if (!renderer || !physics) return;
+      if (refs.dragState.current && refs.isDragging.current) {
+        handleDragEnd(physics, refs, callbacks);
+      } else if (refs.isPanning.current) {
+        handlePanEnd(refs);
+      } else handleClick(getMousePos(event), renderer, callbacks);
+    },
+    [refs, callbacks]
+  );
+  const handleMouseLeave = useCallback(() => cleanupOnLeave(refs, callbacks), [refs, callbacks]);
+  return { handleMouseDown, handleMouseMove, handleMouseUp, handleMouseLeave };
 }
 
 export function useGraphonHandlers<N, E>(
@@ -114,18 +118,8 @@ export function useGraphonHandlers<N, E>(
   config: InteractionConfig
 ): GraphonHandlers {
   const { isDraggable, isPannable, isZoomable, minZoom, maxZoom } = config;
+  const mouseHandlers = useMouseHandlers(refs, callbacks, isDraggable, isPannable);
 
-  const handleMouseDown = useCallback(createMouseDownHandler(refs, isDraggable, isPannable), [
-    refs,
-    isDraggable,
-    isPannable,
-  ]);
-  const handleMouseMove = useCallback(createMouseMoveHandler(refs, callbacks), [refs, callbacks]);
-  const handleMouseUp = useCallback(createMouseUpHandler(refs, callbacks), [refs, callbacks]);
-  const handleMouseLeave = useCallback(
-    () => cleanupOnLeave(refs, callbacks, refs.physics.current),
-    [refs, callbacks]
-  );
   const handleDblClick = useCallback(
     (event: React.MouseEvent<HTMLDivElement>) => {
       const { renderer } = getRendererAndPhysics(refs);
@@ -147,11 +141,8 @@ export function useGraphonHandlers<N, E>(
   );
 
   return {
-    handleMouseDown,
-    handleMouseMove,
-    handleMouseUp,
+    ...mouseHandlers,
     handleDoubleClick: handleDblClick,
-    handleMouseLeave,
     handleWheel,
   };
 }

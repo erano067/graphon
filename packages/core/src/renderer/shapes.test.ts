@@ -356,3 +356,67 @@ describe('drawSingleShape', () => {
     expect(g.circle).toHaveBeenCalledWith(100, 100, 10);
   });
 });
+
+describe('drawRoundDiamonds', () => {
+  it('should draw nothing for empty positions', () => {
+    const g = createMockGraphics();
+    drawExtendedShape(g, { positions: [], radius: 10, shape: 'round-diamond' });
+    expect(g.moveTo).not.toHaveBeenCalled();
+  });
+
+  it('should draw round diamond with bezier curves', () => {
+    const g = createMockGraphics();
+    const positions = [{ x: 50, y: 50 }];
+
+    drawExtendedShape(g, { positions, radius: 10, shape: 'round-diamond' });
+
+    expect(g.moveTo).toHaveBeenCalled();
+    expect(g.quadraticCurveTo).toHaveBeenCalled();
+    expect(g.lineTo).toHaveBeenCalled();
+    expect(g.closePath).toHaveBeenCalled();
+  });
+
+  it('should draw multiple round diamonds', () => {
+    const g = createMockGraphics();
+    const positions = [
+      { x: 0, y: 0 },
+      { x: 100, y: 100 },
+    ];
+
+    drawExtendedShape(g, { positions, radius: 10, shape: 'round-diamond' });
+
+    expect(g.closePath).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('drawRoundTriangles', () => {
+  it('should draw nothing for empty positions', () => {
+    const g = createMockGraphics();
+    drawExtendedShape(g, { positions: [], radius: 10, shape: 'round-triangle' });
+    expect(g.moveTo).not.toHaveBeenCalled();
+  });
+
+  it('should draw round triangle with bezier curves', () => {
+    const g = createMockGraphics();
+    const positions = [{ x: 50, y: 50 }];
+
+    drawExtendedShape(g, { positions, radius: 10, shape: 'round-triangle' });
+
+    expect(g.moveTo).toHaveBeenCalled();
+    expect(g.quadraticCurveTo).toHaveBeenCalled();
+    expect(g.lineTo).toHaveBeenCalled();
+    expect(g.closePath).toHaveBeenCalled();
+  });
+
+  it('should draw multiple round triangles', () => {
+    const g = createMockGraphics();
+    const positions = [
+      { x: 0, y: 0 },
+      { x: 100, y: 100 },
+    ];
+
+    drawExtendedShape(g, { positions, radius: 10, shape: 'round-triangle' });
+
+    expect(g.closePath).toHaveBeenCalledTimes(2);
+  });
+});

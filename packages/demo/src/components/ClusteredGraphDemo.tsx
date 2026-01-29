@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { type Edge, type ExtendedNodeShape, Graphon, type Node } from '@graphon/react';
 import type { EdgeData, NodeData } from '../generator';
 import { type ClusterableNodeData, isClusterNode, useClustering } from '../hooks/useClustering';
@@ -87,8 +87,8 @@ export function ClusteredGraphDemo(props: ClusteredGraphDemoProps): React.ReactE
     updatePositions,
   } = useClustering(nodes, edges, isClusteringEnabled);
 
-  const combinedNodeStyleFn = useCallback(getCombinedNodeStyleFn(nodeStyleFn), [nodeStyleFn]);
-  const combinedCommunityFn = useCallback(getCombinedCommunityFn(communityFn), [communityFn]);
+  const combinedNodeStyleFn = useMemo(() => getCombinedNodeStyleFn(nodeStyleFn), [nodeStyleFn]);
+  const combinedCommunityFn = useMemo(() => getCombinedCommunityFn(communityFn), [communityFn]);
 
   const handleNodeClickInternal = useCallback(
     (node: Node<ClusterableNodeData>): void => {

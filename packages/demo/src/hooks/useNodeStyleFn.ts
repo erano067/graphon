@@ -19,11 +19,11 @@ export function useNodeStyleFn(options: NodeStyleOptions): NodeStyleFn {
 
   return useMemo(() => {
     return (node: Node<NodeData>) => ({
-      color: COMMUNITY_COLORS_HEX[node.data.community % COMMUNITY_COLORS_HEX.length],
+      color: COMMUNITY_COLORS_HEX[node.data.community % COMMUNITY_COLORS_HEX.length] ?? 0xffffff,
       radius: nodeSize,
       shape:
         shapeMode === 'community'
-          ? COMMUNITY_SHAPES[node.data.community % COMMUNITY_SHAPES.length]
+          ? (COMMUNITY_SHAPES[node.data.community % COMMUNITY_SHAPES.length] ?? 'circle')
           : shapeMode,
     });
   }, [shapeMode, nodeSize]);

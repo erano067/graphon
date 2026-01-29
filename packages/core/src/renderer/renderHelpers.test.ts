@@ -6,6 +6,7 @@ import {
   drawNodeGroup,
   drawStyledNodeGroup,
   groupNodesByStyle,
+  groupNodesByVisuals,
   parseStyleKey,
 } from './renderHelpers';
 import type { Graphics } from 'pixi.js';
@@ -327,6 +328,137 @@ describe('groupNodesByStyle', () => {
 
   it('should return empty map for empty nodes array', () => {
     const groups = groupNodesByStyle([], new Map(), undefined, DEFAULT_NODE_VISUALS);
+    expect(groups.size).toBe(0);
+  });
+});
+
+describe('groupNodesByVisuals', () => {
+  const createNode = (id: string, data: { type: string }): Node<{ type: string }> => ({
+    id,
+    data,
+  });
+
+  const createPositions = (ids: string[]): Map<string, Position> => {
+    const positions = new Map<string, Position>();
+    ids.forEach((id, i) => positions.set(id, { x: i * 10, y: i * 10 }));
+    return positions;
+  };
+
+  it('should group all nodes under default visuals when no styleFn provided', () => {
+    const nodes = [createNode('a', { type: 'hub' }), createNode('b', { type: 'leaf' })];
+    const positions = createPositions(['a', 'b']);
+
+    const groups = groupNodesByVisuals({
+      nodes,
+      positions,
+      styleFn: undefined,
+      defaults: DEFAULT_NODE_VISUALS,
+    });
+
+    expect(groups.size).toBe(1);
+  });
+
+  it('should group nodes by shape, color, radius, and alpha', () => {
+    const nodes = [
+      createNode('a', { type: 'hub' }),
+      createNode('b', { type: 'hub' }),
+      createNode('c', { type: 'leaf' }),
+    ];
+    const positions = createPositions(['a', 'b', 'c']);
+    const styleFn = (node: { data: { type: string } }) =>
+      node.data.type === 'hub'
+        ? { shape: 'diamond' as const, color: 0xff0000, radius: 10, alpha: 1 }
+        : { shape: 'circle' as const, color: 0x00ff00, radius: 8, alpha: 0.5 };
+
+    const groups = groupNodesByVisuals({
+      nodes,
+      positions,
+      styleFn,
+      defaults: DEFAULT_NODE_VISUALS,
+    });
+
+    expect(groups.size).toBe(2);
+  });
+
+  it('should skip invisible nodes', () => {
+    const nodes = [createNode('a', { type: 'visible' }), createNode('b', { type: 'hidden' })];
+    const positions = createPositions(['a', 'b']);
+    const styleFn = (node: { data: { type: string } }) => ({
+      visible: node.data.type !== 'hidden',
+    });
+
+    const groups = groupNodesByVisuals({
+      nodes,
+      positions,
+      styleFn,
+      defaults: DEFAULT_NODE_VISUALS,
+    });
+
+    let totalPositions = 0;
+    groups.forEach((group) => {
+      totalPositions += group.positions.length;
+    });
+    expect(totalPositions).toBe(1);
+  });
+
+  it('should skip nodes without positions', () => {
+    const nodes = [createNode('a', { type: 'hub' }), createNode('b', { type: 'leaf' })];
+    const positions = new Map<string, Position>();
+    positions.set('a', { x: 0, y: 0 });
+
+    const groups = groupNodesByVisuals({
+      nodes,
+      positions,
+      styleFn: undefined,
+      defaults: DEFAULT_NODE_VISUALS,
+    });
+
+    let totalPositions = 0;
+    groups.forEach((group) => {
+      totalPositions += group.positions.length;
+    });
+    expect(totalPositions).toBe(1);
+  });
+
+  it('should apply alpha modifier when provided', () => {
+    const nodes = [createNode('a', { type: 'hub' })];
+    const positions = createPositions(['a']);
+    const alphaModifier = (_nodeId: string, baseAlpha: number) => baseAlpha * 0.5;
+
+    const groups = groupNodesByVisuals({
+      nodes,
+      positions,
+      styleFn: undefined,
+      defaults: DEFAULT_NODE_VISUALS,
+      alphaModifier,
+    });
+
+    expect(groups.size).toBe(1);
+  });
+
+  it('should round radius and alpha to reduce unique keys', () => {
+    const nodes = [createNode('a', { type: 'hub' }), createNode('b', { type: 'hub' })];
+    const positions = createPositions(['a', 'b']);
+    const styleFn = (node: { id: string }) =>
+      node.id === 'a' ? { radius: 10.01, alpha: 0.991 } : { radius: 10.04, alpha: 0.994 };
+
+    const groups = groupNodesByVisuals({
+      nodes,
+      positions,
+      styleFn,
+      defaults: DEFAULT_NODE_VISUALS,
+    });
+
+    expect(groups.size).toBe(1);
+  });
+
+  it('should return empty map for empty nodes array', () => {
+    const groups = groupNodesByVisuals({
+      nodes: [],
+      positions: new Map(),
+      styleFn: undefined,
+      defaults: DEFAULT_NODE_VISUALS,
+    });
     expect(groups.size).toBe(0);
   });
 });

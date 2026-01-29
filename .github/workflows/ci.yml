@@ -124,8 +124,8 @@ jobs:
           name: build-output
           path: packages
 
-      - name: Test
-        run: pnpm test
+      - name: Test with coverage
+        run: pnpm test:coverage
 
   release:
     name: Release

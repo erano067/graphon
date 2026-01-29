@@ -28,22 +28,30 @@ function adjustForRoundingErrors(
   let total = sizes.reduce((a, b) => a + b, 0);
 
   while (total < nodeCount) {
-    sizes[Math.floor(Math.random() * communityCount)]++;
-    total++;
+    const idx = Math.floor(Math.random() * communityCount);
+    const size = sizes[idx];
+    if (size !== undefined) {
+      sizes[idx] = size + 1;
+      total++;
+    }
   }
 
   while (total > nodeCount) {
     const idx = sizes.findIndex((s) => s > minPerCommunity);
     if (idx < 0) break;
-    sizes[idx]--;
-    total--;
+    const size = sizes[idx];
+    if (size !== undefined) {
+      sizes[idx] = size - 1;
+      total--;
+    }
   }
 }
 
 function shuffleAssignments(sizes: number[], communityCount: number): number[] {
   const assignments: number[] = [];
   for (let c = 0; c < communityCount; c++) {
-    for (let i = 0; i < sizes[c]; i++) {
+    const size = sizes[c] ?? 0;
+    for (let i = 0; i < size; i++) {
       assignments.push(c);
     }
   }

@@ -5,7 +5,7 @@ export function createNodeStates(nodeCount: number, communities: number[]): Node
   return Array.from({ length: nodeCount }, (_, i) => ({
     id: `node-${i}`,
     index: i,
-    community: communities[i],
+    community: communities[i] ?? 0,
     degree: 0,
     neighbors: new Set<number>(),
   }));
@@ -56,21 +56,33 @@ export function shuffleArray<T>(array: T[]): T[] {
   const result = [...array];
   for (let i = result.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [result[i], result[j]] = [result[j], result[i]];
+    const temp = result[i];
+    const swap = result[j];
+    if (temp !== undefined && swap !== undefined) {
+      result[i] = swap;
+      result[j] = temp;
+    }
   }
   return result;
 }
 
 export function pickRandom<T>(array: T[]): T {
-  return array[Math.floor(Math.random() * array.length)];
+  const item = array[Math.floor(Math.random() * array.length)];
+  if (item === undefined) throw new Error('Cannot pick from empty array');
+  return item;
 }
 
 export function pickWeighted<T>(items: T[], weights: number[]): T {
+  if (items.length === 0) throw new Error('Cannot pick from empty array');
   const totalWeight = weights.reduce((a, b) => a + b, 0);
   let r = Math.random() * totalWeight;
   for (let i = 0; i < items.length; i++) {
-    r -= weights[i];
-    if (r <= 0) return items[i];
+    const weight = weights[i] ?? 0;
+    r -= weight;
+    const item = items[i];
+    if (r <= 0 && item !== undefined) return item;
   }
-  return items[items.length - 1];
+  const last = items[items.length - 1];
+  if (last === undefined) throw new Error('Cannot pick from empty array');
+  return last;
 }

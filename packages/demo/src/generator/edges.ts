@@ -89,8 +89,12 @@ function tryCloseTriangle(params: TriangleParams): void {
   let j = Math.floor(Math.random() * neighborList.length);
   if (i === j) j = (j + 1) % neighborList.length;
 
-  const a = nodes[neighborList[i]];
-  const b = nodes[neighborList[j]];
+  const neighborI = neighborList[i];
+  const neighborJ = neighborList[j];
+  if (neighborI === undefined || neighborJ === undefined) return;
+
+  const a = nodes[neighborI];
+  const b = nodes[neighborJ];
 
   if (a === undefined || b === undefined) return;
   if (a.neighbors.has(b.index)) return;

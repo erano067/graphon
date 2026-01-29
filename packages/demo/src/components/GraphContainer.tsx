@@ -60,7 +60,7 @@ export function GraphContainer({
         createWorkerFn={createWorkerFn}
         onNodeClick={onNodeClick}
         onNodeHover={onNodeHover}
-        onZoomChange={onZoomChange}
+        {...(onZoomChange && { onZoomChange })}
       />
     </div>
   );
