@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <linearGradient id="nodeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea"/>
+      <stop offset="100%" style="stop-color:#764ba2"/>
+    </linearGradient>
+    <linearGradient id="edgeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:0.6"/>
+      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:0.6"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Edges -->
+  <line x1="100" y1="50" x2="50" y2="100" stroke="url(#edgeGradient)" stroke-width="3" stroke-linecap="round"/>
+  <line x1="100" y1="50" x2="150" y2="100" stroke="url(#edgeGradient)" stroke-width="3" stroke-linecap="round"/>
+  <line x1="50" y1="100" x2="75" y2="160" stroke="url(#edgeGradient)" stroke-width="3" stroke-linecap="round"/>
+  <line x1="150" y1="100" x2="125" y2="160" stroke="url(#edgeGradient)" stroke-width="3" stroke-linecap="round"/>
+  <line x1="50" y1="100" x2="150" y2="100" stroke="url(#edgeGradient)" stroke-width="3" stroke-linecap="round"/>
+  <line x1="75" y1="160" x2="125" y2="160" stroke="url(#edgeGradient)" stroke-width="3" stroke-linecap="round"/>
+  
+  <!-- Nodes -->
+  <circle cx="100" cy="50" r="18" fill="url(#nodeGradient)"/>
+  <circle cx="50" cy="100" r="14" fill="url(#nodeGradient)"/>
+  <circle cx="150" cy="100" r="14" fill="url(#nodeGradient)"/>
+  <circle cx="75" cy="160" r="12" fill="url(#nodeGradient)"/>
+  <circle cx="125" cy="160" r="12" fill="url(#nodeGradient)"/>
+  
+  <!-- Center highlight -->
+  <circle cx="100" cy="50" r="6" fill="white" opacity="0.3"/>
+</svg>
