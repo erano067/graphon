@@ -115,7 +115,11 @@ function run(): void {
     log(`   🏷️  ${tag}`);
   }
 
-  log(`\n✅ Release v${newVersion} created.`);
+  log('\n📤 Pushing to remote...');
+  execSync('git push', { stdio: 'inherit' });
+  execSync('git push --tags', { stdio: 'inherit' });
+
+  log(`\n✅ Release v${newVersion} published.`);
 }
 
 run();
