@@ -11,8 +11,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  lint:
-    name: Lint
+  ci:
+    name: CI
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -24,59 +24,20 @@ jobs:
           node-version: 20
           cache: 'pnpm'
 
-      - run: pnpm install --frozen-lockfile
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
-      - run: pnpm lint
+      - name: Build packages
+        run: pnpm build
 
-      - run: pnpm format:check
+      - name: Type check
+        run: pnpm typecheck
 
-  typecheck:
-    name: Type Check
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+      - name: Lint
+        run: pnpm lint
 
-      - uses: pnpm/action-setup@v4
+      - name: Format check
+        run: pnpm format:check
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'pnpm'
-
-      - run: pnpm install --frozen-lockfile
-
-      - run: pnpm typecheck
-
-  test:
-    name: Test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: pnpm/action-setup@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'pnpm'
-
-      - run: pnpm install --frozen-lockfile
-
-      - run: pnpm test
-
-  build:
-    name: Build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: pnpm/action-setup@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'pnpm'
-
-      - run: pnpm install --frozen-lockfile
-
-      - run: pnpm build
+      - name: Test
+        run: pnpm test

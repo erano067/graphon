@@ -20,6 +20,7 @@ export {
 
 export interface HandlerCallbacks<N, E> {
   onNodeClick: ((node: Node<N>) => void) | undefined;
+  onNodeDoubleClick: ((node: Node<N>) => void) | undefined;
   onNodeHover: ((node: Node<N> | undefined) => void) | undefined;
   onNodeDrag: ((nodeId: string, position: Position) => void) | undefined;
   onNodeDragEnd: ((nodeId: string, position: Position) => void) | undefined;
@@ -43,6 +44,15 @@ export function handleClick<N, E>(
   if (hit.type === 'node' && hit.node) callbacks.onNodeClick?.(hit.node);
   else if (hit.type === 'edge' && hit.edge) callbacks.onEdgeClick?.(hit.edge);
   else if (hit.type === 'canvas') callbacks.onCanvasClick?.(hit.position);
+}
+
+export function handleDoubleClick<N, E>(
+  pos: Position,
+  renderer: PixiRenderer<N, E>,
+  callbacks: HandlerCallbacks<N, E>
+): void {
+  const hit = renderer.hitTest(pos.x, pos.y);
+  if (hit.type === 'node' && hit.node) callbacks.onNodeDoubleClick?.(hit.node);
 }
 
 function updateNodeHover<N, E>(

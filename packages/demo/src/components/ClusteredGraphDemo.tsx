@@ -21,6 +21,7 @@ interface ClusteredGraphDemoProps {
   dimOpacity: number;
   createWorkerFn: () => Worker;
   onNodeClick?: (node: Node<NodeData>) => void;
+  onNodeDoubleClick?: (node: Node<NodeData>) => void;
   onNodeHover?: (node: Node<NodeData> | undefined) => void;
   onZoomChange?: (zoom: number) => void;
   isClusteringEnabled: boolean;
@@ -81,7 +82,7 @@ export function ClusteredGraphDemo(props: ClusteredGraphDemoProps): React.ReactE
     edgesToRender,
     expandedClusters,
     clusterPositions,
-    handleNodeClick: handleClusterClick,
+    handleNodeDoubleClick,
     handleClusterCircleClick,
     updatePositions,
   } = useClustering(nodes, edges, isClusteringEnabled);
@@ -91,10 +92,16 @@ export function ClusteredGraphDemo(props: ClusteredGraphDemoProps): React.ReactE
 
   const handleNodeClickInternal = useCallback(
     (node: Node<ClusterableNodeData>): void => {
-      handleClusterClick(node);
       if (!isClusterNode(node.data)) onNodeClick?.(node as Node<NodeData>);
     },
-    [handleClusterClick, onNodeClick]
+    [onNodeClick]
+  );
+
+  const handleNodeDoubleClickInternal = useCallback(
+    (node: Node<ClusterableNodeData>): void => {
+      handleNodeDoubleClick(node);
+    },
+    [handleNodeDoubleClick]
   );
 
   const handleNodeHoverInternal = useCallback(
@@ -117,12 +124,12 @@ export function ClusteredGraphDemo(props: ClusteredGraphDemoProps): React.ReactE
     const interval = setInterval(() => {
       const positions = new Map<string, { x: number; y: number }>();
       for (const node of nodesToRender) {
-        if (!isClusterNode(node.data) && node.x !== undefined && node.y !== undefined) {
+        if (node.x !== undefined && node.y !== undefined) {
           positions.set(node.id, { x: node.x, y: node.y });
         }
       }
       if (positions.size > 0) updatePositions(positions);
-    }, 500);
+    }, 100);
     return () => clearInterval(interval);
   }, [nodesToRender, updatePositions]);
 
@@ -141,6 +148,7 @@ export function ClusteredGraphDemo(props: ClusteredGraphDemoProps): React.ReactE
         dimOpacity={dimOpacity}
         createWorkerFn={createWorkerFn}
         onNodeClick={handleNodeClickInternal}
+        onNodeDoubleClick={handleNodeDoubleClickInternal}
         onNodeHover={handleNodeHoverInternal}
         onZoomChange={handleZoomChangeInternal}
       />

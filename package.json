@@ -8,13 +8,15 @@
     "build": "pnpm -r build",
     "test": "pnpm -r test",
     "test:coverage": "pnpm -r test:coverage",
-    "lint": "eslint packages",
-    "lint:fix": "eslint packages --fix",
-    "lint:strict": "eslint packages --max-warnings 0",
+    "lint": "eslint packages --ignore-pattern packages/storybook",
+    "lint:fix": "eslint packages --ignore-pattern packages/storybook --fix",
+    "lint:strict": "eslint packages --ignore-pattern packages/storybook --max-warnings 0",
     "format": "prettier --write \"packages/**/*.{ts,tsx,json}\"",
     "format:check": "prettier --check \"packages/**/*.{ts,tsx,json}\"",
     "typecheck": "pnpm -r typecheck",
-    "check-all": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test"
+    "check-all": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test",
+    "storybook": "pnpm --filter @graphon/storybook dev",
+    "storybook:build": "pnpm --filter @graphon/storybook build"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.8.1",

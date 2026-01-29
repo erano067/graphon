@@ -63,6 +63,7 @@ export function Graphon<N = Record<string, unknown>, E = Record<string, unknown>
     dimOpacity = 0.15,
     createWorkerFn,
     onNodeClick,
+    onNodeDoubleClick,
     onNodeHover,
     onNodeDrag,
     onNodeDragEnd,
@@ -92,6 +93,7 @@ export function Graphon<N = Record<string, unknown>, E = Record<string, unknown>
     refs,
     {
       onNodeClick,
+      onNodeDoubleClick,
       onNodeHover,
       onNodeDrag,
       onNodeDragEnd,
@@ -122,6 +124,7 @@ export function Graphon<N = Record<string, unknown>, E = Record<string, unknown>
       onMouseDown={handlers.handleMouseDown}
       onMouseMove={handlers.handleMouseMove}
       onMouseUp={handlers.handleMouseUp}
+      onDoubleClick={handlers.handleDoubleClick}
       onMouseLeave={handlers.handleMouseLeave}
     />
   );

@@ -48,9 +48,9 @@ export function ClusterCircles({
     const pos = clusterPositions.get(community);
     if (!pos) return null;
 
-    const screenX = 400 + pos.x * viewport.scale;
-    const screenY = 300 + pos.y * viewport.scale;
-    const screenRadius = pos.radius * viewport.scale;
+    const screenX = 400 + (pos.x + viewport.x) * viewport.scale;
+    const screenY = 300 + (pos.y + viewport.y) * viewport.scale;
+    const screenRadius = Math.max(40, pos.radius * viewport.scale);
 
     const hexColor = getCommunityColor(community);
 

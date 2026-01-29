@@ -1,0 +1,34 @@
+{
+  "name": "@graphon/storybook",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Storybook documentation for Graphon graph visualization library",
+  "type": "module",
+  "scripts": {
+    "dev": "storybook dev -p 6006",
+    "build": "storybook build",
+    "typecheck": "echo 'Skipping typecheck for storybook (private package)'"
+  },
+  "dependencies": {
+    "@graphon/core": "workspace:*",
+    "@graphon/react": "workspace:*",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
+  },
+  "devDependencies": {
+    "@chromatic-com/storybook": "^3.2.6",
+    "@storybook/addon-docs": "^8.6.12",
+    "@storybook/addon-essentials": "^8.6.12",
+    "@storybook/addon-interactions": "^8.6.12",
+    "@storybook/addon-links": "^8.6.12",
+    "@storybook/blocks": "^8.6.12",
+    "@storybook/react": "^8.6.12",
+    "@storybook/react-vite": "^8.6.12",
+    "@storybook/test": "^8.6.12",
+    "@types/react": "^19.2.10",
+    "@types/react-dom": "^19.2.3",
+    "storybook": "^8.6.12",
+    "typescript": "^5.9.3",
+    "vite": "^6.2.6"
+  }
+}

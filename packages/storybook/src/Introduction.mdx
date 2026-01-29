@@ -1,0 +1,69 @@
+import { Meta } from '@storybook/blocks';
+
+<Meta title="Introduction" />
+
+# Graphon
+
+**High-performance graph visualization library for React**
+
+Graphon is a powerful, WebGL-powered graph visualization library built on PixiJS. It provides smooth, interactive graph rendering with support for large datasets, custom styling, and advanced features like clustering and animations.
+
+## Features
+
+- 🚀 **High Performance** - WebGL rendering via PixiJS handles thousands of nodes smoothly
+- 🎨 **Customizable Styling** - Node shapes, colors, gradients, images, and icons
+- 📊 **Multiple Layouts** - Force-directed, circular, grid, hierarchical, and radial
+- 🔗 **Edge Styling** - Curves, arrows, labels, and custom widths
+- 🎯 **Interactions** - Click, hover, drag, pan, zoom, and selection
+- 📦 **Clustering** - Automatic grouping with expand/collapse
+- ✨ **Animations** - Smooth transitions and layout animations
+
+## Quick Start
+
+```tsx
+import { Graphon } from '@graphon/react';
+
+function MyGraph() {
+  const nodes = [
+    { id: 'a', data: { label: 'Node A' } },
+    { id: 'b', data: { label: 'Node B' } },
+    { id: 'c', data: { label: 'Node C' } },
+  ];
+
+  const edges = [
+    { id: 'ab', source: 'a', target: 'b', data: {} },
+    { id: 'bc', source: 'b', target: 'c', data: {} },
+  ];
+
+  return (
+    <Graphon
+      nodes={nodes}
+      edges={edges}
+      width={800}
+      height={600}
+      onNodeClick={(event) => console.log('Clicked:', event.node.id)}
+    />
+  );
+}
+```
+
+## Installation
+
+```bash
+npm install @graphon/react @graphon/core
+# or
+pnpm add @graphon/react @graphon/core
+# or
+yarn add @graphon/react @graphon/core
+```
+
+## Explore
+
+Use the sidebar to explore different features and examples:
+
+- **Basics** - Simple graphs, node styling, edge styling
+- **Shapes** - All available node shapes
+- **Layouts** - Different layout algorithms
+- **Interactions** - Click, hover, drag, and selection
+- **Clustering** - Grouping and expand/collapse
+- **Advanced** - Large graphs, performance, and customization
