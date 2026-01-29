@@ -23,6 +23,9 @@ importers:
       '@eslint/js':
         specifier: ^9.39.2
         version: 9.39.2
+      '@types/node':
+        specifier: ^25.1.0
+        version: 25.1.0
       '@vitest/coverage-v8':
         specifier: ^4.0.18
         version: 4.0.18(vitest@4.0.18(@types/node@25.1.0)(jiti@2.6.1)(yaml@2.8.2))
