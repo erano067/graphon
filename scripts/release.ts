@@ -32,10 +32,6 @@ function getLatestReleaseTag(): string | null {
   }
 }
 
-function getVersionFromTag(tag: string): string {
-  return tag.replace('@graphon/core@', '');
-}
-
 function getCommitsSinceTag(tag: string | null): string {
   try {
     if (tag === null) {
@@ -98,7 +94,8 @@ function run(): void {
 
   const arg = process.argv[2];
   const latestTag = getLatestReleaseTag();
-  const currentVersion = latestTag !== null ? getVersionFromTag(latestTag) : '0.0.0';
+  const corePkg = readPackageJson('packages/core');
+  const currentVersion = corePkg.version;
 
   if (arg === '--check-only') {
     if (!hasReleasableCommits(latestTag)) {
