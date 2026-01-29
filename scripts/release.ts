@@ -111,13 +111,12 @@ function run(): void {
   for (const dir of PACKAGES) {
     const pkg = readPackageJson(dir);
     const tag = `${pkg.name}@${newVersion}`;
-    execSync(`git tag ${tag}`, { stdio: 'inherit' });
+    execSync(`git tag -a ${tag} -m "Release ${tag}"`, { stdio: 'inherit' });
     log(`   🏷️  ${tag}`);
   }
 
   log('\n📤 Pushing to remote...');
-  execSync('git push', { stdio: 'inherit' });
-  execSync('git push --tags', { stdio: 'inherit' });
+  execSync('git push --follow-tags', { stdio: 'inherit' });
 
   log(`\n✅ Release v${newVersion} created and pushed.`);
 }

@@ -13,6 +13,7 @@
     "packages/core/*.ts",
     "packages/react/src/**/*",
     "packages/demo/src/**/*",
-    "packages/demo/*.ts"
+    "packages/demo/*.ts",
+    "scripts/**/*"
   ]
 }
