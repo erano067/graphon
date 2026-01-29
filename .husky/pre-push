@@ -1,0 +1,20 @@
+#!/bin/sh
+
+# Only auto-release when pushing to main
+while read local_ref local_sha remote_ref remote_sha; do
+  if echo "$remote_ref" | grep -q "refs/heads/main"; then
+    # Check if there are commits to release (not just tags)
+    if [ "$local_sha" != "0000000000000000000000000000000000000000" ]; then
+      echo "🚀 Auto-release: checking for version bump..."
+      npx tsx scripts/release.ts --check-only || exit 0
+      
+      echo "🚀 Creating release..."
+      npx tsx scripts/release.ts
+      
+      # Abort this push, re-push with the release commit and tags
+      echo "🚀 Re-pushing with release commit and tags..."
+      git push --follow-tags
+      exit 1
+    fi
+  fi
+done

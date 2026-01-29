@@ -20,21 +20,34 @@ function writePackageJson(dir: string, pkg: PackageJson): void {
   writeFileSync(path, `${JSON.stringify(pkg, null, 2)}\n`);
 }
 
-function getConventionalBump(): 'major' | 'minor' | 'patch' {
+function getCommitsSinceLastTag(): string {
   try {
     const lastTag = execSync('git describe --tags --abbrev=0 2>/dev/null || echo ""', {
       encoding: 'utf-8',
     }).trim();
 
     const range = lastTag ? `${lastTag}..HEAD` : 'HEAD';
-    const gitLog = execSync(`git log ${range} --oneline`, { encoding: 'utf-8' });
-
-    if (gitLog.includes('BREAKING CHANGE') || gitLog.includes('!:')) return 'major';
-    if (/feat[:(]/.test(gitLog)) return 'minor';
-    return 'patch';
+    return execSync(`git log ${range} --oneline`, { encoding: 'utf-8' });
   } catch {
-    return 'patch';
+    return '';
   }
+}
+
+function hasReleasableCommits(): boolean {
+  const gitLog = getCommitsSinceLastTag();
+  if (!gitLog.trim()) return false;
+
+  const lines = gitLog.trim().split('\n');
+  const nonReleaseCommits = lines.filter((line) => !line.includes('chore: release v'));
+  return nonReleaseCommits.length > 0;
+}
+
+function getConventionalBump(): 'major' | 'minor' | 'patch' {
+  const gitLog = getCommitsSinceLastTag();
+
+  if (gitLog.includes('BREAKING CHANGE') || gitLog.includes('!:')) return 'major';
+  if (/feat[:(]/.test(gitLog)) return 'minor';
+  return 'patch';
 }
 
 function bumpVersion(version: string, type: 'major' | 'minor' | 'patch'): string {
@@ -61,6 +74,21 @@ function log(message: string): void {
 
 function run(): void {
   const arg = process.argv[2];
+
+  if (arg === '--check-only') {
+    if (!hasReleasableCommits()) {
+      log('📦 No releasable commits found, skipping release.');
+      process.exit(1);
+    }
+    log('📦 Releasable commits found.');
+    process.exit(0);
+  }
+
+  if (!hasReleasableCommits()) {
+    log('📦 No releasable commits found, skipping release.');
+    return;
+  }
+
   const bump: BumpType = isValidBumpType(arg) ? arg : getConventionalBump();
 
   log(`📦 Detected bump type: ${bump}`);
@@ -78,7 +106,7 @@ function run(): void {
   }
 
   execSync('git add packages/*/package.json', { stdio: 'inherit' });
-  execSync(`git commit -m "chore: release v${newVersion}"`, { stdio: 'inherit' });
+  execSync(`git commit -m "chore: release v${newVersion}" --no-verify`, { stdio: 'inherit' });
 
   for (const dir of PACKAGES) {
     const pkg = readPackageJson(dir);
@@ -87,7 +115,7 @@ function run(): void {
     log(`   🏷️  ${tag}`);
   }
 
-  log(`\n✅ Release v${newVersion} ready. Run 'git push --follow-tags' to publish.`);
+  log(`\n✅ Release v${newVersion} created.`);
 }
 
 run();
