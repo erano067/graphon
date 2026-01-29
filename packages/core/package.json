@@ -1,6 +1,6 @@
 {
   "name": "@graphon/core",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "High-performance graph visualization library",
   "license": "MIT",
   "repository": {
