@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  ClusterBuilder,
   type ClusterBuilderOptions,
   type ClusterHierarchy,
   DEFAULT_LOD_CONFIG,
@@ -9,6 +8,7 @@ import {
   LODManager,
   type LODRenderSet,
   type PositionMap,
+  buildClustersFromAttributes,
 } from '@graphon/core';
 
 export interface UseLODOptions {
@@ -96,8 +96,8 @@ export function useLOD<N = Record<string, unknown>, E = Record<string, unknown>>
   );
 
   const buildHierarchy = useCallback(
-    (positions?: PositionMap, opts?: ClusterBuilderOptions) => {
-      const hierarchy = ClusterBuilder.buildFromAttributes(model, {
+    (positions?: PositionMap, opts?: ClusterBuilderOptions): ClusterHierarchy => {
+      const hierarchy = buildClustersFromAttributes(model, {
         ...opts,
         ...(positions && { positions }),
       });
@@ -109,14 +109,14 @@ export function useLOD<N = Record<string, unknown>, E = Record<string, unknown>>
   );
 
   const setHierarchy = useCallback(
-    (hierarchy: ClusterHierarchy) => {
+    (hierarchy: ClusterHierarchy): void => {
       lodManager.setHierarchy(hierarchy);
       setRenderSet(lodManager.getCurrentRenderSet());
     },
     [lodManager]
   );
 
-  const clearHierarchy = useCallback(() => {
+  const clearHierarchy = useCallback((): void => {
     lodManager.clearHierarchy();
     setRenderSet(lodManager.getCurrentRenderSet());
   }, [lodManager]);

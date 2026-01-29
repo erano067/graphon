@@ -18,6 +18,7 @@ interface GraphContainerProps {
   createWorkerFn: () => Worker;
   onNodeClick: (node: Node<NodeData>) => void;
   onNodeHover: (node: Node<NodeData> | undefined) => void;
+  onZoomChange?: (zoom: number) => void;
 }
 
 const containerStyle = {
@@ -41,6 +42,7 @@ export function GraphContainer({
   createWorkerFn,
   onNodeClick,
   onNodeHover,
+  onZoomChange,
 }: GraphContainerProps): React.ReactElement {
   return (
     <div style={containerStyle}>
@@ -58,6 +60,7 @@ export function GraphContainer({
         createWorkerFn={createWorkerFn}
         onNodeClick={onNodeClick}
         onNodeHover={onNodeHover}
+        onZoomChange={onZoomChange}
       />
     </div>
   );

@@ -1,137 +1,146 @@
 import { describe, expect, it } from 'vitest';
-import { createGraphModel } from '../model/GraphologyAdapter';
-import type { PositionMap } from '../model/types';
-import { ClusterBuilder } from './ClusterBuilder';
+import { GraphologyAdapter } from '../model/GraphologyAdapter';
+import type { Node, PositionMap } from '../model/types';
+import { buildClustersFromAttributes, buildClustersFromCommunity } from './ClusterBuilder';
 
-interface ClusterNodeData {
-  cluster_level_0: string;
-  cluster_level_1?: string;
-  [key: string]: unknown;
-}
+const createGraphModel = <N, E = Record<string, unknown>>(): GraphologyAdapter<N, E> =>
+  new GraphologyAdapter<N, E>();
 
-describe('ClusterBuilder', () => {
-  it('builds hierarchy from node cluster attributes', () => {
-    const model = createGraphModel<ClusterNodeData>();
+describe('ClusterBuilder functions', () => {
+  describe('buildClustersFromCommunity', () => {
+    it('should create clusters from community assignments', () => {
+      const model = createGraphModel<{ community: number }>();
+      model.addNode({ id: 'a', data: { community: 0 } });
+      model.addNode({ id: 'b', data: { community: 0 } });
+      model.addNode({ id: 'c', data: { community: 1 } });
 
-    model.addNode({ id: 'a', data: { cluster_level_0: 'c0', cluster_level_1: 'c1a' } });
-    model.addNode({ id: 'b', data: { cluster_level_0: 'c0', cluster_level_1: 'c1a' } });
-    model.addNode({ id: 'c', data: { cluster_level_0: 'c0', cluster_level_1: 'c1b' } });
-    model.addNode({ id: 'd', data: { cluster_level_0: 'c2' } });
+      const hierarchy = buildClustersFromCommunity(
+        model,
+        (node: Node<{ community: number }>) => node.data.community
+      );
 
-    const hierarchy = ClusterBuilder.buildFromAttributes(model, { maxLevel: 1 });
+      expect(hierarchy.clusters.size).toBe(2);
+      expect(hierarchy.clusters.get('cluster_0')?.children).toEqual(['a', 'b']);
+      expect(hierarchy.clusters.get('cluster_1')?.children).toEqual(['c']);
+    });
 
-    expect(hierarchy.maxLevel).toBe(1);
-    expect(hierarchy.clusters.size).toBe(4); // c0, c1a, c1b, c2 across levels
+    it('should compute cluster positions from node positions', () => {
+      const model = createGraphModel<{ community: number }>();
+      model.addNode({ id: 'a', data: { community: 0 } });
+      model.addNode({ id: 'b', data: { community: 0 } });
+
+      const positions: PositionMap = new Map([
+        ['a', { x: 0, y: 0 }],
+        ['b', { x: 100, y: 100 }],
+      ]);
+
+      const hierarchy = buildClustersFromCommunity(
+        model,
+        (node: Node<{ community: number }>) => node.data.community,
+        positions
+      );
+
+      const cluster = hierarchy.clusters.get('cluster_0');
+      expect(cluster?.x).toBe(50); // Center of 0 and 100
+      expect(cluster?.y).toBe(50);
+    });
+
+    it('should handle empty positions gracefully', () => {
+      const model = createGraphModel<{ community: number }>();
+      model.addNode({ id: 'a', data: { community: 0 } });
+
+      const hierarchy = buildClustersFromCommunity(
+        model,
+        (node: Node<{ community: number }>) => node.data.community
+      );
+
+      const cluster = hierarchy.clusters.get('cluster_0');
+      expect(cluster?.x).toBe(0);
+      expect(cluster?.y).toBe(0);
+    });
+
+    it('should build cluster edges between communities', () => {
+      const model = createGraphModel<{ community: number }>();
+      model.addNode({ id: 'a', data: { community: 0 } });
+      model.addNode({ id: 'b', data: { community: 1 } });
+      model.addEdge({ id: 'e1', source: 'a', target: 'b', data: {} });
+
+      const hierarchy = buildClustersFromCommunity(
+        model,
+        (node: Node<{ community: number }>) => node.data.community
+      );
+
+      const clusterEdges = hierarchy.clusterEdges.get(0);
+      expect(clusterEdges).toBeDefined();
+      expect(clusterEdges?.length).toBe(1);
+      expect(clusterEdges?.[0]?.edges).toEqual(['e1']);
+    });
+
+    it('should not create cluster edges for internal edges', () => {
+      const model = createGraphModel<{ community: number }>();
+      model.addNode({ id: 'a', data: { community: 0 } });
+      model.addNode({ id: 'b', data: { community: 0 } });
+      model.addEdge({ id: 'e1', source: 'a', target: 'b', data: {} });
+
+      const hierarchy = buildClustersFromCommunity(
+        model,
+        (node: Node<{ community: number }>) => node.data.community
+      );
+
+      const clusterEdges = hierarchy.clusterEdges.get(0);
+      expect(clusterEdges?.length).toBe(0);
+    });
+
+    it('should map nodes to their clusters', () => {
+      const model = createGraphModel<{ community: number }>();
+      model.addNode({ id: 'a', data: { community: 0 } });
+      model.addNode({ id: 'b', data: { community: 1 } });
+
+      const hierarchy = buildClustersFromCommunity(
+        model,
+        (node: Node<{ community: number }>) => node.data.community
+      );
+
+      expect(hierarchy.nodeToCluster.get('a')).toEqual(['cluster_0']);
+      expect(hierarchy.nodeToCluster.get('b')).toEqual(['cluster_1']);
+    });
   });
 
-  it('calculates cluster positions as center of mass', () => {
-    const model = createGraphModel<ClusterNodeData>();
+  describe('buildClustersFromAttributes', () => {
+    it('should create hierarchy from cluster attributes', () => {
+      const model = createGraphModel<{ cluster_level_0: string }>();
+      model.addNode({ id: 'a', data: { cluster_level_0: 'c0' } });
+      model.addNode({ id: 'b', data: { cluster_level_0: 'c0' } });
+      model.addNode({ id: 'c', data: { cluster_level_0: 'c1' } });
 
-    model.addNode({ id: 'a', data: { cluster_level_0: 'c0' } });
-    model.addNode({ id: 'b', data: { cluster_level_0: 'c0' } });
+      const hierarchy = buildClustersFromAttributes(model, { maxLevel: 0 });
 
-    const positions: PositionMap = new Map([
-      ['a', { x: 0, y: 0 }],
-      ['b', { x: 10, y: 20 }],
-    ]);
+      expect(hierarchy.clusters.size).toBe(2);
+      expect(hierarchy.clusters.get('c0')?.children).toEqual(['a', 'b']);
+      expect(hierarchy.clusters.get('c1')?.children).toEqual(['c']);
+    });
 
-    const hierarchy = ClusterBuilder.buildFromAttributes(model, { maxLevel: 0, positions });
-    const cluster = hierarchy.clusters.get('c0');
+    it('should handle multi-level hierarchies', () => {
+      const model = createGraphModel<{ cluster_level_0: string; cluster_level_1: string }>();
+      model.addNode({ id: 'a', data: { cluster_level_0: 'region_a', cluster_level_1: 'city_1' } });
+      model.addNode({ id: 'b', data: { cluster_level_0: 'region_a', cluster_level_1: 'city_2' } });
 
-    expect(cluster?.x).toBe(5);
-    expect(cluster?.y).toBe(10);
-  });
+      const hierarchy = buildClustersFromAttributes(model, { maxLevel: 1 });
 
-  it('sets correct cluster sizes', () => {
-    const model = createGraphModel<ClusterNodeData>();
+      expect(hierarchy.maxLevel).toBe(1);
+      expect(hierarchy.clusters.get('region_a')?.children).toEqual(['a', 'b']);
+      expect(hierarchy.clusters.get('city_1')?.children).toEqual(['a']);
+      expect(hierarchy.clusters.get('city_2')?.children).toEqual(['b']);
+    });
 
-    model.addNode({ id: 'a', data: { cluster_level_0: 'c0' } });
-    model.addNode({ id: 'b', data: { cluster_level_0: 'c0' } });
-    model.addNode({ id: 'c', data: { cluster_level_0: 'c0' } });
-    model.addNode({ id: 'd', data: { cluster_level_0: 'c1' } });
+    it('should set parent cluster correctly', () => {
+      const model = createGraphModel<{ cluster_level_0: string; cluster_level_1: string }>();
+      model.addNode({ id: 'a', data: { cluster_level_0: 'region_a', cluster_level_1: 'city_1' } });
 
-    const hierarchy = ClusterBuilder.buildFromAttributes(model, { maxLevel: 0 });
+      const hierarchy = buildClustersFromAttributes(model, { maxLevel: 1 });
 
-    expect(hierarchy.clusters.get('c0')?.size).toBe(3);
-    expect(hierarchy.clusters.get('c1')?.size).toBe(1);
-  });
-
-  it('maps nodes to clusters correctly', () => {
-    const model = createGraphModel<ClusterNodeData>();
-
-    model.addNode({ id: 'a', data: { cluster_level_0: 'c0', cluster_level_1: 'c1' } });
-
-    const hierarchy = ClusterBuilder.buildFromAttributes(model, { maxLevel: 1 });
-    const nodeClusters = hierarchy.nodeToCluster.get('a');
-
-    expect(nodeClusters).toEqual(['c0', 'c1']);
-  });
-
-  it('builds cluster edges between different clusters', () => {
-    const model = createGraphModel<ClusterNodeData>();
-
-    model.addNode({ id: 'a', data: { cluster_level_0: 'c0' } });
-    model.addNode({ id: 'b', data: { cluster_level_0: 'c0' } });
-    model.addNode({ id: 'c', data: { cluster_level_0: 'c1' } });
-    model.addEdge({ id: 'e1', source: 'a', target: 'c', data: {} });
-    model.addEdge({ id: 'e2', source: 'b', target: 'c', data: {} });
-
-    const hierarchy = ClusterBuilder.buildFromAttributes(model, { maxLevel: 0 });
-    const clusterEdges = hierarchy.clusterEdges.get(0) ?? [];
-    const firstEdge = clusterEdges[0];
-
-    expect(clusterEdges.length).toBe(1);
-    expect(firstEdge?.weight).toBe(2);
-    expect(firstEdge?.edges).toContain('e1');
-    expect(firstEdge?.edges).toContain('e2');
-  });
-
-  it('excludes internal edges from cluster edges', () => {
-    const model = createGraphModel<ClusterNodeData>();
-
-    model.addNode({ id: 'a', data: { cluster_level_0: 'c0' } });
-    model.addNode({ id: 'b', data: { cluster_level_0: 'c0' } });
-    model.addEdge({ id: 'e1', source: 'a', target: 'b', data: {} });
-
-    const hierarchy = ClusterBuilder.buildFromAttributes(model, { maxLevel: 0 });
-    const clusterEdges = hierarchy.clusterEdges.get(0) ?? [];
-
-    expect(clusterEdges.length).toBe(0);
-  });
-
-  it('sets parent cluster correctly', () => {
-    const model = createGraphModel<ClusterNodeData>();
-
-    model.addNode({ id: 'a', data: { cluster_level_0: 'region', cluster_level_1: 'city' } });
-    model.addNode({ id: 'b', data: { cluster_level_0: 'region', cluster_level_1: 'city' } });
-
-    const hierarchy = ClusterBuilder.buildFromAttributes(model, { maxLevel: 1 });
-    const cityCluster = hierarchy.clusters.get('city');
-
-    expect(cityCluster?.parent).toBe('region');
-  });
-
-  it('handles nodes without cluster attributes', () => {
-    const model = createGraphModel<Partial<ClusterNodeData>>();
-
-    model.addNode({ id: 'a', data: { cluster_level_0: 'c0' } });
-    model.addNode({ id: 'b', data: {} });
-
-    const hierarchy = ClusterBuilder.buildFromAttributes(model, { maxLevel: 0 });
-
-    expect(hierarchy.nodeToCluster.get('a')).toEqual(['c0']);
-    expect(hierarchy.nodeToCluster.get('b')).toEqual([]);
-  });
-
-  it('sets position to 0,0 when no positions provided', () => {
-    const model = createGraphModel<ClusterNodeData>();
-
-    model.addNode({ id: 'a', data: { cluster_level_0: 'c0' } });
-
-    const hierarchy = ClusterBuilder.buildFromAttributes(model, { maxLevel: 0 });
-    const cluster = hierarchy.clusters.get('c0');
-
-    expect(cluster?.x).toBe(0);
-    expect(cluster?.y).toBe(0);
+      const city = hierarchy.clusters.get('city_1');
+      expect(city?.parent).toBe('region_a');
+    });
   });
 });

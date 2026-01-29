@@ -146,7 +146,12 @@ export type {
   PhysicsEngine,
 } from './physics';
 
-export { ClusterBuilder, DEFAULT_LOD_CONFIG, LODManager } from './clustering';
+export {
+  buildClustersFromCommunity,
+  buildClustersFromAttributes,
+  DEFAULT_LOD_CONFIG,
+  LODManager,
+} from './clustering';
 export type {
   ClusterBuilderOptions,
   ClusterEdge,

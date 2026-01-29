@@ -1,6 +1,16 @@
 {
   "name": "@graphon/react",
   "version": "0.0.1",
+  "description": "React bindings for Graphon graph visualization library",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/erano067/graphon.git",
+    "directory": "packages/react"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",

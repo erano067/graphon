@@ -29,6 +29,10 @@ interface AppState {
   setCurvature: (curvature: number) => void;
   targetArrow: ArrowShape;
   setTargetArrow: (arrow: ArrowShape) => void;
+  isClusteringEnabled: boolean;
+  setEnableClustering: (enable: boolean) => void;
+  currentZoom: number;
+  setCurrentZoom: (zoom: number) => void;
 }
 
 export function useAppState(): AppState {
@@ -45,6 +49,8 @@ export function useAppState(): AppState {
   const [curveStyle, setCurveStyle] = useState<EdgeCurveStyle>('straight');
   const [curvature, setCurvature] = useState(0.3);
   const [targetArrow, setTargetArrow] = useState<ArrowShape>('none');
+  const [isClusteringEnabled, setEnableClustering] = useState(false);
+  const [currentZoom, setCurrentZoom] = useState(1);
 
   const regenerate = useCallback(() => setSeed((s) => s + 1), []);
 
@@ -75,5 +81,9 @@ export function useAppState(): AppState {
     setCurvature,
     targetArrow,
     setTargetArrow,
+    isClusteringEnabled,
+    setEnableClustering,
+    currentZoom,
+    setCurrentZoom,
   };
 }

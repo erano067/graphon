@@ -4,6 +4,8 @@ export type { GraphonProps } from './types';
 // Hooks
 export { useLOD } from './hooks/useLOD';
 export type { UseLODOptions, UseLODResult } from './hooks/useLOD';
+export { useClusterLOD } from './hooks/useClusterLOD';
+export type { ClusterLODConfig, ClusterLODResult } from './hooks/useClusterLOD';
 export { useAnimation } from './hooks/useAnimation';
 export type { UseAnimationOptions, UseAnimationResult } from './hooks/useAnimation';
 export { useLayout } from './hooks/useLayout';
@@ -38,7 +40,8 @@ export {
   isAsyncPhysicsEngine,
   DEFAULT_PHYSICS_CONFIG,
   // Clustering
-  ClusterBuilder,
+  buildClustersFromCommunity,
+  buildClustersFromAttributes,
   LODManager,
   DEFAULT_LOD_CONFIG,
   // Animation

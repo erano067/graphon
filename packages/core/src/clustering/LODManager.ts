@@ -98,14 +98,13 @@ export class LODManager<N = Record<string, unknown>, E = Record<string, unknown>
   private zoomToLevel(zoom: number): number {
     const thresholds = this.config.zoomThresholds;
 
-    for (let i = 0; i < thresholds.length; i++) {
-      const threshold = thresholds[i];
-      if (threshold !== undefined && zoom < threshold) {
+    for (const [i, threshold] of thresholds.entries()) {
+      if (zoom < threshold) {
         return i;
       }
     }
 
-    return thresholds.length;
+    return thresholds.length; // Max detail
   }
 
   private getRenderSet(level: number): LODRenderSet {
@@ -114,38 +113,42 @@ export class LODManager<N = Record<string, unknown>, E = Record<string, unknown>
       return this.getAllElements();
     }
 
-    const { clustersAtLevel, expandedNodes, expandedNodeSet } = this.partitionClusters(
-      hierarchy,
-      level
-    );
+    const { clusters, expandedNodes, expandedNodeSet } = this.partitionClusters(hierarchy, level);
     const edges = this.getEdgesBetweenNodes(expandedNodeSet);
     const clusterEdges = hierarchy.clusterEdges.get(level) ?? [];
 
-    return { nodes: expandedNodes, edges, clusters: clustersAtLevel, clusterEdges, level };
+    return { nodes: expandedNodes, edges, clusters, clusterEdges, level };
   }
 
-  private partitionClusters(hierarchy: ClusterHierarchy, level: number) {
-    const clustersAtLevel: ClusterNode[] = [];
+  private partitionClusters(
+    hierarchy: ClusterHierarchy,
+    level: number
+  ): { clusters: ClusterNode[]; expandedNodes: string[]; expandedNodeSet: Set<string> } {
+    const clusters: ClusterNode[] = [];
     const expandedNodes: string[] = [];
     const expandedNodeSet = new Set<string>();
 
     for (const cluster of hierarchy.clusters.values()) {
       if (cluster.level !== level) continue;
       if (cluster.size < this.config.minClusterSize) {
-        this.expandClusterNodes(cluster, expandedNodes, expandedNodeSet);
+        this.expandClusterChildren(cluster, expandedNodes, expandedNodeSet);
       } else {
-        clustersAtLevel.push(cluster);
+        clusters.push(cluster);
       }
     }
 
-    return { clustersAtLevel, expandedNodes, expandedNodeSet };
+    return { clusters, expandedNodes, expandedNodeSet };
   }
 
-  private expandClusterNodes(cluster: ClusterNode, nodes: string[], nodeSet: Set<string>): void {
+  private expandClusterChildren(
+    cluster: ClusterNode,
+    expandedNodes: string[],
+    expandedNodeSet: Set<string>
+  ): void {
     for (const nodeId of cluster.children) {
-      if (!nodeSet.has(nodeId)) {
-        nodes.push(nodeId);
-        nodeSet.add(nodeId);
+      if (!expandedNodeSet.has(nodeId)) {
+        expandedNodes.push(nodeId);
+        expandedNodeSet.add(nodeId);
       }
     }
   }
@@ -164,8 +167,12 @@ export class LODManager<N = Record<string, unknown>, E = Record<string, unknown>
     const nodes: string[] = [];
     const edges: string[] = [];
 
-    for (const node of this.model.nodes()) nodes.push(node.id);
-    for (const edge of this.model.edges()) edges.push(edge.id);
+    for (const node of this.model.nodes()) {
+      nodes.push(node.id);
+    }
+    for (const edge of this.model.edges()) {
+      edges.push(edge.id);
+    }
 
     return {
       nodes,

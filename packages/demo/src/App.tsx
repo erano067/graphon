@@ -1,5 +1,7 @@
 import { useCallback } from 'react';
 import type { Node } from '@graphon/react';
+import { ClusteredGraphDemo } from './components/ClusteredGraphDemo';
+import { ClusteringControls } from './components/ClusteringControls';
 import { Controls } from './components/Controls';
 import { GraphContainer } from './components/GraphContainer';
 import { Sidebar } from './components/Sidebar';
@@ -25,6 +27,8 @@ export function App(): React.ReactElement {
     curveStyle,
     curvature,
     targetArrow,
+    isClusteringEnabled,
+    currentZoom,
   } = state;
   const { nodes, edges, isLoading } = useGraphGenerator({ nodeCount, communityCount, seed });
   const avgDegree = nodes.length > 0 ? ((edges.length * 2) / nodes.length).toFixed(1) : 0;
@@ -60,20 +64,46 @@ export function App(): React.ReactElement {
         onRegenerate={state.regenerate}
       />
 
+      <ClusteringControls
+        isClusteringEnabled={isClusteringEnabled}
+        currentZoom={currentZoom}
+        communityCount={communityCount}
+        onToggle={(checked) => state.setEnableClustering(checked)}
+      />
+
       <div style={{ display: 'flex', gap: 20 }}>
-        <GraphContainer
-          nodes={nodes}
-          edges={edges}
-          isLoading={isLoading}
-          nodeStyleFn={nodeStyleFn}
-          edgeStyleFn={edgeStyleFn}
-          communityFn={communityFn}
-          shouldHighlightNeighbors={state.shouldHighlightNeighbors}
-          dimOpacity={state.dimOpacity}
-          createWorkerFn={createPhysicsWorker}
-          onNodeClick={state.setSelectedNode}
-          onNodeHover={state.setHoveredNode}
-        />
+        {isClusteringEnabled ? (
+          <ClusteredGraphDemo
+            nodes={nodes}
+            edges={edges}
+            isLoading={isLoading}
+            nodeStyleFn={nodeStyleFn}
+            edgeStyleFn={edgeStyleFn}
+            communityFn={communityFn}
+            shouldHighlightNeighbors={state.shouldHighlightNeighbors}
+            dimOpacity={state.dimOpacity}
+            createWorkerFn={createPhysicsWorker}
+            onNodeClick={state.setSelectedNode}
+            onNodeHover={state.setHoveredNode}
+            onZoomChange={state.setCurrentZoom}
+            isClusteringEnabled={isClusteringEnabled}
+          />
+        ) : (
+          <GraphContainer
+            nodes={nodes}
+            edges={edges}
+            isLoading={isLoading}
+            nodeStyleFn={nodeStyleFn}
+            edgeStyleFn={edgeStyleFn}
+            communityFn={communityFn}
+            shouldHighlightNeighbors={state.shouldHighlightNeighbors}
+            dimOpacity={state.dimOpacity}
+            createWorkerFn={createPhysicsWorker}
+            onNodeClick={state.setSelectedNode}
+            onNodeHover={state.setHoveredNode}
+            onZoomChange={state.setCurrentZoom}
+          />
+        )}
 
         <Sidebar
           nodes={nodes}

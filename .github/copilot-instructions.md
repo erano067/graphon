@@ -39,6 +39,7 @@ Before every change, ask yourself:
 - Avoid **boolean flag parameters** — split into separate functions instead
 - **Max 4 parameters** — use an options object for more
 - **Negate conditions to exit early** — avoid deep nesting with guard clauses
+- No Comments at all!! code should be self-explanatory
 - Return early, fail fast — don't wrap entire function body in conditionals
 - Pure functions over side effects when possible
 - Name functions with verbs that describe what they do

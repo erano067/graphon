@@ -5,16 +5,15 @@ const CURVE_STYLES: EdgeCurveStyle[] = ['straight', 'bezier', 'arc', 'taxi'];
 const ARROW_SHAPES: ArrowShape[] = [
   'none',
   'triangle',
+  'triangle-tee',
   'triangle-cross',
   'vee',
   'tee',
+  'bar',
   'circle',
-  'circle-triangle',
   'diamond',
   'square',
   'chevron',
-  'double-chevron',
-  'bowtie',
 ];
 
 interface EdgeControlsProps {
