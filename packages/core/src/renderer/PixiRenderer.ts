@@ -9,6 +9,7 @@ import {
   type Viewport,
 } from './types';
 import { findEdgeAt, findNodeAt, screenToWorld } from './hitTesting';
+import { renderEdges } from './renderEdges';
 import { renderNodes } from './renderNodes';
 
 export class PixiRenderer<
@@ -86,13 +87,13 @@ export class PixiRenderer<
     nodes: Node<N>[],
     edges: Edge<E>[],
     positions: PositionMap,
-    options?: RenderOptions<N>
+    options?: RenderOptions<N, E>
   ): void {
     this.currentNodes = nodes;
     this.currentEdges = edges;
     this.positions = positions; // Direct reference, no copy needed
 
-    this.renderEdges(edges);
+    this.renderEdgesInternal(edges, options);
     this.renderNodesInternal(nodes, options);
     this.applyViewport();
   }
@@ -142,28 +143,20 @@ export class PixiRenderer<
     }
   }
 
-  private renderEdges(edges: Edge<E>[]): void {
+  private renderEdgesInternal(edges: Edge<E>[], options?: RenderOptions<N, E>): void {
     if (!this.edgeGraphics) return;
-    this.edgeGraphics.clear();
 
-    if (edges.length === 0) return;
-
-    const style = this.config.edgeStyle;
-    const g = this.edgeGraphics;
-
-    // Batch all edge paths, then stroke once
-    for (const edge of edges) {
-      const source = this.positions.get(edge.source);
-      const target = this.positions.get(edge.target);
-      if (!source || !target) continue;
-
-      g.moveTo(source.x, source.y);
-      g.lineTo(target.x, target.y);
-    }
-
-    g.stroke({ width: style.width, color: style.color, alpha: style.alpha });
+    renderEdges({
+      graphics: this.edgeGraphics,
+      edges,
+      positions: this.positions,
+      defaultStyle: this.config.edgeStyle,
+      ...(options?.edgeStyleFn && { edgeStyleFn: options.edgeStyleFn }),
+      ...(options?.highlightState && { highlightState: options.highlightState }),
+    });
   }
-  private renderNodesInternal(nodes: Node<N>[], options?: RenderOptions<N>): void {
+
+  private renderNodesInternal(nodes: Node<N>[], options?: RenderOptions<N, E>): void {
     if (!this.nodeGraphics) return;
     renderNodes({
       graphics: this.nodeGraphics,

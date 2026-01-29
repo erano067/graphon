@@ -122,6 +122,7 @@ export class PhysicsSimulation<N = Record<string, unknown>, E = Record<string, u
     state.vy = 0;
     // Update cache with new Position object
     this.cachedPositions.set(nodeId, { x: position.x, y: position.y });
+    this.wake();
   }
 
   pinNode(nodeId: string): void {
@@ -130,6 +131,7 @@ export class PhysicsSimulation<N = Record<string, unknown>, E = Record<string, u
     state.pinned = true;
     state.vx = 0;
     state.vy = 0;
+    this.wake();
   }
 
   unpinNode(nodeId: string): void {

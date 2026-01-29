@@ -1,5 +1,5 @@
 import type { Edge, Node, PositionMap } from '../model/types';
-import type { NodeShape, ResolvedNodeVisuals } from './shapes';
+import type { NodeShape, ResolvedEdgeVisuals, ResolvedNodeVisuals } from './shapes';
 
 /**
  * Visual styling options for nodes.
@@ -56,7 +56,28 @@ export interface RenderConfig {
  */
 export type NodeStyleFn<N> = (node: { id: string; data: N }) => Partial<ResolvedNodeVisuals>;
 
-export type { NodeShape, ResolvedNodeVisuals };
+/**
+ * Function that determines an edge's visual style based on its data.
+ * Return partial styles - unspecified properties use defaults.
+ * @typeParam E - Edge data type
+ */
+export type EdgeStyleFn<E> = (edge: Edge<E>) => Partial<ResolvedEdgeVisuals>;
+
+/**
+ * State for highlight effects during hover/selection.
+ */
+export interface HighlightState {
+  /** ID of the currently hovered node */
+  hoveredNodeId?: string;
+  /** IDs of currently selected nodes */
+  selectedNodeIds: Set<string>;
+  /** Whether to highlight neighbors of hovered/selected nodes */
+  shouldHighlightNeighbors: boolean;
+  /** Opacity for non-highlighted (dimmed) elements (0-1) */
+  dimOpacity: number;
+}
+
+export type { NodeShape, ResolvedNodeVisuals, ResolvedEdgeVisuals };
 
 /**
  * Represents the current viewport state (pan and zoom).
@@ -89,10 +110,17 @@ export interface HitTestResult<N, E> {
 /**
  * Options for rendering operations.
  * @typeParam N - Node data type
+ * @typeParam E - Edge data type
  */
-export interface RenderOptions<N> {
+export interface RenderOptions<N, E = Record<string, unknown>> {
   /** Function to customize node visuals (color, shape, size). */
   nodeStyleFn?: NodeStyleFn<N>;
+  /** Function to customize edge visuals (color, width). */
+  edgeStyleFn?: EdgeStyleFn<E>;
+  /** Highlight state for hover/selection effects. */
+  highlightState?: HighlightState;
+  /** Map of node IDs to their neighbor IDs (for highlight effects). */
+  adjacency?: Map<string, Set<string>>;
   /**
    * If true, user is actively interacting (panning/zooming).
    * Used for frame rate throttling during continuous interactions.
@@ -121,7 +149,7 @@ export interface Renderer<N, E> {
     nodes: Node<N>[],
     edges: Edge<E>[],
     positions: PositionMap,
-    options?: RenderOptions<N>
+    options?: RenderOptions<N, E>
   ): void;
   /** Updates the viewport (pan/zoom). */
   setViewport(viewport: Viewport): void;

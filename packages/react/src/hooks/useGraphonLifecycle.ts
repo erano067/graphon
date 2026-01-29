@@ -28,13 +28,36 @@ function createAnimationLoop<N, E>(refs: GraphonRefs<N, E>): () => void {
   const MIN_FRAME_TIME = 16;
 
   const runTick = async (): Promise<void> => {
-    const { workerClient, renderer, nodes, edges, nodeStyleFn, isInteracting } = refs;
+    const {
+      workerClient,
+      renderer,
+      nodes,
+      edges,
+      nodeStyleFn,
+      edgeStyleFn,
+      isInteracting,
+      hoveredNode,
+      selectedNodes,
+      adjacency,
+      highlightOptions,
+    } = refs;
     if (!workerClient.current || !renderer.current) return;
 
     const positions = await workerClient.current.tick();
+    const { highlightNeighbors: shouldHighlightNeighbors, dimOpacity } = highlightOptions.current;
+    const hoveredNodeId = hoveredNode.current;
+
     renderer.current.render(nodes.current, edges.current, positions, {
       ...(nodeStyleFn.current && { nodeStyleFn: nodeStyleFn.current }),
+      ...(edgeStyleFn.current && { edgeStyleFn: edgeStyleFn.current }),
       isInteracting: isInteracting.current,
+      highlightState: {
+        ...(hoveredNodeId !== undefined && { hoveredNodeId }),
+        selectedNodeIds: selectedNodes.current,
+        shouldHighlightNeighbors,
+        dimOpacity,
+      },
+      adjacency: adjacency.current,
     });
   };
 

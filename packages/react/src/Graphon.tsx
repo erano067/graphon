@@ -1,9 +1,9 @@
-import { useEffect } from 'react';
 import type { GraphonProps } from './types';
-import { useGraphonRefs } from './hooks/useGraphonRefs';
 import { useGraphonHandlers } from './hooks/useGraphonHandlers';
 import { useGraphonLifecycle } from './hooks/useGraphonLifecycle';
+import { useGraphonRefs } from './hooks/useGraphonRefs';
 import { useGraphonUpdates } from './hooks/useGraphonUpdates';
+import { useWheelHandler } from './hooks/useWheelHandler';
 
 /**
  * High-performance graph visualization component.
@@ -57,7 +57,10 @@ export function Graphon<N = Record<string, unknown>, E = Record<string, unknown>
     minZoom = 0.1,
     maxZoom = 4,
     nodeStyleFn,
+    edgeStyleFn,
     communityFn,
+    highlightNeighbors: shouldHighlightNeighbors = true,
+    dimOpacity = 0.15,
     createWorkerFn,
     onNodeClick,
     onNodeHover,
@@ -69,7 +72,12 @@ export function Graphon<N = Record<string, unknown>, E = Record<string, unknown>
     onZoomChange,
   } = props;
 
-  const refs = useGraphonRefs(nodes, edges, nodeStyleFn);
+  const refs = useGraphonRefs(nodes, edges, {
+    ...(nodeStyleFn && { nodeStyleFn }),
+    ...(edgeStyleFn && { edgeStyleFn }),
+    highlightNeighbors: shouldHighlightNeighbors,
+    dimOpacity,
+  });
 
   useGraphonLifecycle(refs, {
     width,
@@ -78,7 +86,7 @@ export function Graphon<N = Record<string, unknown>, E = Record<string, unknown>
     ...(communityFn && { communityFn }),
     ...(createWorkerFn && { createWorkerFn }),
   });
-  useGraphonUpdates(refs, nodes, edges, { width, height, communityFn, nodeStyleFn });
+  useGraphonUpdates(refs, nodes, edges, { width, height, communityFn, nodeStyleFn, edgeStyleFn });
 
   const handlers = useGraphonHandlers(
     refs,
@@ -95,13 +103,7 @@ export function Graphon<N = Record<string, unknown>, E = Record<string, unknown>
     { isDraggable, isPannable, isZoomable, minZoom, maxZoom }
   );
 
-  // Attach wheel listener with { passive: false } to allow preventDefault
-  useEffect(() => {
-    const container = refs.container.current;
-    if (!container) return;
-    container.addEventListener('wheel', handlers.handleWheel, { passive: false });
-    return () => container.removeEventListener('wheel', handlers.handleWheel);
-  }, [refs.container, handlers.handleWheel]);
+  useWheelHandler(refs.container, handlers.handleWheel);
 
   const cursor = refs.isDragging.current || refs.isPanning.current ? 'grabbing' : 'default';
 

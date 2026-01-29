@@ -1,22 +1,35 @@
 import type { Graphics } from 'pixi.js';
 import type { Position } from '../model/types';
 
-/** Supported node shapes. */
-export type NodeShape = 'circle' | 'square' | 'diamond';
+// Re-export types and defaults
+export type { NodeShape, ExtendedNodeShape, ExtendedShapeOptions } from './shapeTypes';
+export type { ResolvedNodeVisuals, ResolvedEdgeVisuals } from './shapeTypes';
+export { DEFAULT_NODE_VISUALS, DEFAULT_EDGE_VISUALS } from './shapeTypes';
 
-/** Style properties resolved for a single node. */
-export interface ResolvedNodeVisuals {
-  color: number;
-  radius: number;
-  shape: NodeShape;
-}
+// Re-export extended shape functions
+export {
+  drawEllipses,
+  drawRectangles,
+  drawRoundRectangles,
+  drawRoundDiamonds,
+  drawTriangles,
+  drawRoundTriangles,
+  drawRegularPolygons,
+  drawPentagons,
+  drawHexagons,
+  drawOctagons,
+  drawStars,
+  drawTags,
+  drawVees,
+  drawExtendedShape,
+  drawSingleShape,
+} from './extendedShapes';
 
-/** Default visuals when not specified. */
-export const DEFAULT_NODE_VISUALS: ResolvedNodeVisuals = {
-  color: 0x4a90d9,
-  radius: 8,
-  shape: 'circle',
-};
+import type { NodeShape } from './shapeTypes';
+
+// ============================================================================
+// Basic Shapes (original 3-shape API)
+// ============================================================================
 
 /** Draws circles at the given positions. */
 export function drawCircles(g: Graphics, positions: Position[], radius: number): void {
@@ -44,7 +57,11 @@ export function drawDiamonds(g: Graphics, positions: Position[], radius: number)
   }
 }
 
-/** Draws shapes based on the shape type. */
+// ============================================================================
+// Legacy Draw Function
+// ============================================================================
+
+/** Draws shapes based on the shape type (legacy 3-shape API). */
 export function drawShape(
   g: Graphics,
   positions: Position[],

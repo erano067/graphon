@@ -124,18 +124,16 @@ export class PhysicsWorkerCore implements PhysicsWorkerAPI {
     state.y = update.y;
     state.vx = 0;
     state.vy = 0;
+    this.wake();
   }
 
   setPinned(request: WorkerPinRequest): void {
     const state = this.nodeStates.get(request.nodeId);
     if (!state) return;
     state.pinned = request.pinned;
-    if (request.pinned) {
-      state.vx = 0;
-      state.vy = 0;
-    } else {
-      this.wake();
-    }
+    state.vx = 0;
+    state.vy = 0;
+    this.wake();
   }
 
   resize(request: WorkerResizeRequest): void {

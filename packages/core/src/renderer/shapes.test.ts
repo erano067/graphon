@@ -1,13 +1,35 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { Graphics } from 'pixi.js';
-import { DEFAULT_NODE_VISUALS, drawCircles, drawDiamonds, drawShape, drawSquares } from './shapes';
+import {
+  DEFAULT_NODE_VISUALS,
+  drawCircles,
+  drawDiamonds,
+  drawEllipses,
+  drawExtendedShape,
+  drawHexagons,
+  drawOctagons,
+  drawPentagons,
+  drawRectangles,
+  drawRegularPolygons,
+  drawRoundRectangles,
+  drawShape,
+  drawSingleShape,
+  drawSquares,
+  drawStars,
+  drawTags,
+  drawTriangles,
+  drawVees,
+} from './shapes';
 
 function createMockGraphics(): Graphics {
   return {
     circle: vi.fn().mockReturnThis(),
+    ellipse: vi.fn().mockReturnThis(),
     rect: vi.fn().mockReturnThis(),
+    roundRect: vi.fn().mockReturnThis(),
     moveTo: vi.fn().mockReturnThis(),
     lineTo: vi.fn().mockReturnThis(),
+    quadraticCurveTo: vi.fn().mockReturnThis(),
     closePath: vi.fn().mockReturnThis(),
   } as unknown as Graphics;
 }
@@ -146,5 +168,191 @@ describe('drawShape', () => {
     expect(g.closePath).toHaveBeenCalled();
     expect(g.circle).not.toHaveBeenCalled();
     expect(g.rect).not.toHaveBeenCalled();
+  });
+});
+
+// ============================================================================
+// Extended Shape Tests
+// ============================================================================
+
+describe('drawEllipses', () => {
+  it('should draw ellipses at given positions', () => {
+    const g = createMockGraphics();
+    const positions = [{ x: 50, y: 50 }];
+
+    drawEllipses(g, positions, { radiusX: 15, radiusY: 10 });
+
+    expect(g.ellipse).toHaveBeenCalledWith(50, 50, 15, 10);
+  });
+});
+
+describe('drawRectangles', () => {
+  it('should draw centered rectangles', () => {
+    const g = createMockGraphics();
+    const positions = [{ x: 100, y: 100 }];
+
+    drawRectangles(g, positions, { width: 30, height: 20 });
+
+    expect(g.rect).toHaveBeenCalledWith(85, 90, 30, 20);
+  });
+});
+
+describe('drawRoundRectangles', () => {
+  it('should draw rounded rectangles', () => {
+    const g = createMockGraphics();
+    const positions = [{ x: 100, y: 100 }];
+
+    drawRoundRectangles(g, positions, { width: 30, height: 20, cornerRadius: 5 });
+
+    expect(g.roundRect).toHaveBeenCalledWith(85, 90, 30, 20, 5);
+  });
+});
+
+describe('drawTriangles', () => {
+  it('should draw triangles', () => {
+    const g = createMockGraphics();
+    const positions = [{ x: 50, y: 50 }];
+
+    drawTriangles(g, positions, 10);
+
+    expect(g.moveTo).toHaveBeenCalled();
+    expect(g.lineTo).toHaveBeenCalledTimes(2);
+    expect(g.closePath).toHaveBeenCalled();
+  });
+});
+
+describe('drawRegularPolygons', () => {
+  it('should draw pentagons', () => {
+    const g = createMockGraphics();
+    const positions = [{ x: 50, y: 50 }];
+
+    drawPentagons(g, positions, 10);
+
+    expect(g.moveTo).toHaveBeenCalled();
+    expect(g.lineTo).toHaveBeenCalledTimes(4); // 5 sides - 1 moveTo
+    expect(g.closePath).toHaveBeenCalled();
+  });
+
+  it('should draw hexagons', () => {
+    const g = createMockGraphics();
+    const positions = [{ x: 50, y: 50 }];
+
+    drawHexagons(g, positions, 10);
+
+    expect(g.moveTo).toHaveBeenCalled();
+    expect(g.lineTo).toHaveBeenCalledTimes(5); // 6 sides - 1 moveTo
+    expect(g.closePath).toHaveBeenCalled();
+  });
+
+  it('should draw octagons', () => {
+    const g = createMockGraphics();
+    const positions = [{ x: 50, y: 50 }];
+
+    drawOctagons(g, positions, 10);
+
+    expect(g.moveTo).toHaveBeenCalled();
+    expect(g.lineTo).toHaveBeenCalledTimes(7); // 8 sides - 1 moveTo
+    expect(g.closePath).toHaveBeenCalled();
+  });
+
+  it('should handle empty positions', () => {
+    const g = createMockGraphics();
+    drawRegularPolygons(g, [], 10, { sides: 6 });
+    expect(g.moveTo).not.toHaveBeenCalled();
+  });
+});
+
+describe('drawStars', () => {
+  it('should draw 5-pointed star by default', () => {
+    const g = createMockGraphics();
+    const positions = [{ x: 50, y: 50 }];
+
+    drawStars(g, positions, 10, { points: 5, innerRadiusRatio: 0.4 });
+
+    expect(g.moveTo).toHaveBeenCalled();
+    expect(g.lineTo).toHaveBeenCalledTimes(9); // 10 points - 1 moveTo
+    expect(g.closePath).toHaveBeenCalled();
+  });
+
+  it('should support custom point count', () => {
+    const g = createMockGraphics();
+    const positions = [{ x: 50, y: 50 }];
+
+    drawStars(g, positions, 10, { points: 6, innerRadiusRatio: 0.4 }); // 6-pointed star
+
+    expect(g.lineTo).toHaveBeenCalledTimes(11); // 12 points - 1 moveTo
+  });
+});
+
+describe('drawTags', () => {
+  it('should draw tag shapes', () => {
+    const g = createMockGraphics();
+    const positions = [{ x: 50, y: 50 }];
+
+    drawTags(g, positions, { width: 30, height: 20 });
+
+    expect(g.moveTo).toHaveBeenCalled();
+    expect(g.lineTo).toHaveBeenCalledTimes(4);
+    expect(g.closePath).toHaveBeenCalled();
+  });
+});
+
+describe('drawVees', () => {
+  it('should draw vee/chevron shapes', () => {
+    const g = createMockGraphics();
+    const positions = [{ x: 50, y: 50 }];
+
+    drawVees(g, positions, 10);
+
+    expect(g.moveTo).toHaveBeenCalled();
+    expect(g.lineTo).toHaveBeenCalledTimes(5);
+    expect(g.closePath).toHaveBeenCalled();
+  });
+});
+
+describe('drawExtendedShape', () => {
+  it('should draw all extended shape types', () => {
+    const shapes = [
+      'circle',
+      'ellipse',
+      'square',
+      'rectangle',
+      'round-rectangle',
+      'diamond',
+      'triangle',
+      'pentagon',
+      'hexagon',
+      'octagon',
+      'star',
+      'tag',
+      'vee',
+      'polygon',
+    ] as const;
+
+    for (const shape of shapes) {
+      const g = createMockGraphics();
+      expect(() =>
+        drawExtendedShape(g, { positions: [{ x: 50, y: 50 }], radius: 10, shape })
+      ).not.toThrow();
+    }
+  });
+
+  it('should use custom options', () => {
+    const g = createMockGraphics();
+    drawExtendedShape(g, {
+      positions: [{ x: 50, y: 50 }],
+      radius: 10,
+      shape: 'star',
+      shapeOptions: { starPoints: 8, starInnerRadius: 0.5 },
+    });
+    expect(g.lineTo).toHaveBeenCalledTimes(15); // 16 points - 1 moveTo
+  });
+});
+
+describe('drawSingleShape', () => {
+  it('should draw a single shape at given position', () => {
+    const g = createMockGraphics();
+    drawSingleShape(g, { position: { x: 100, y: 100 }, radius: 10, shape: 'circle' });
+    expect(g.circle).toHaveBeenCalledWith(100, 100, 10);
   });
 });

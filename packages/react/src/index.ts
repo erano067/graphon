@@ -21,6 +21,7 @@ export {
   DEFAULT_EDGE_STYLE,
   DEFAULT_RENDER_CONFIG,
   DEFAULT_NODE_VISUALS,
+  DEFAULT_EDGE_VISUALS,
   // Layout
   ForceLayout,
   CircularLayout,
@@ -67,9 +68,18 @@ export type {
   NodeStyle,
   EdgeStyle,
   NodeStyleFn,
+  EdgeStyleFn,
   NodeShape,
+  ExtendedNodeShape,
+  ExtendedShapeOptions,
   ResolvedNodeVisuals,
+  ResolvedEdgeVisuals,
   RenderOptions,
+  HighlightState,
+  // Edge curve/arrow types
+  EdgeCurveStyle,
+  ArrowShape,
+  ArrowStyle,
   // Layout
   Layout,
   LayoutType,
