@@ -143,7 +143,7 @@ function publish(): void {
     for (const dir of PACKAGES) {
       const pkgPath = join(ROOT, dir);
       log(`   Publishing ${dir}...`);
-      execSync('npm publish --access public', { stdio: 'inherit', cwd: pkgPath });
+      execSync('pnpm publish --access public --no-git-checks', { stdio: 'inherit', cwd: pkgPath });
     }
     log(`✅ Published v${version} to npm.`);
   }
